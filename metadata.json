@@ -1,0 +1,5 @@
+{
+  "name": "Marché Manager",
+  "description": "Application de gestion pour commerçants non-sédentaires : suivi des marchés, gains, frais et statistiques visuelles.",
+  "requestFramePermissions": ["geolocation"]
+}

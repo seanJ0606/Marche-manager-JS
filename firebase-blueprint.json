@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "MarketEntry": {
+      "title": "Market Entry",
+      "description": "A record of a market day, including financial data and metadata.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The user ID of the owner." },
+        "marketName": { "type": "string", "description": "Name of the market." },
+        "date": { "type": "string", "format": "date", "description": "Date of the market." },
+        "weather": { "type": "string", "description": "Weather condition (sunny, cloudy, rainy, etc.)" },
+        "kmTravelled": { "type": "number", "description": "Kilometers travelled." },
+        "startTime": { "type": "string", "description": "Start time of the market." },
+        "endTime": { "type": "string", "description": "End time of the market." },
+        "cashGains": { "type": "number", "description": "Gains in cash." },
+        "cardGains": { "type": "number", "description": "Gains via card (CB)." },
+        "expenses": { "type": "number", "description": "Total expenses for the day." },
+        "satisfaction": { "type": "number", "description": "Satisfaction score from 0 to 5." },
+        "tags": { 
+          "type": "array", 
+          "items": { "type": "string" },
+          "description": "Tags or products associated with the market entry." 
+        },
+        "photoUrl": { "type": "string", "description": "Base64 or URL of a photo of the market." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp of creation." }
+      },
+      "required": ["uid", "marketName", "date", "cashGains", "cardGains", "expenses", "satisfaction"]
+    },
+    "UserSettings": {
+      "title": "User Settings",
+      "description": "Global settings for a user, such as merchandise expenses.",
+      "type": "object",
+      "properties": {
+        "merchandiseExpenses": { "type": "number", "description": "Total merchandise expenses tracking." },
+        "stockPercentage": { "type": "number", "description": "Current stock percentage (0-100)." }
+      }
+    }
+  },
+  "firestore": {
+    "markets": {
+      "schema": "MarketEntry",
+      "description": "Collection of market entries for all users."
+    },
+    "settings": {
+      "schema": "UserSettings",
+      "description": "User-specific settings and global tracking values."
+    }
+  }
+}

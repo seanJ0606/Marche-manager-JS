@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: markets
+    // Document ID: auto-generated
+    // Fields:
+    //   - uid: string (required) - The user ID of the owner.
+    //   - marketName: string (required, 1-100 chars) - Name of the market.
+    //   - date: string (required, ISO 8601 date) - Date of the market.
+    //   - weather: string (optional) - Weather condition.
+    //   - kmTravelled: number (optional, >= 0) - Kilometers travelled.
+    //   - startTime: string (optional) - Start time.
+    //   - endTime: string (optional) - End time.
+    //   - cashGains: number (required, >= 0) - Gains in cash.
+    //   - cardGains: number (required, >= 0) - Gains via card (CB).
+    //   - expenses: number (required, >= 0) - Total expenses.
+    //   - satisfaction: number (required, 0-5) - Satisfaction score.
+    //   - photoUrl: string (optional) - Photo of the market.
+    //   - createdAt: string (required, ISO 8601 date-time) - Timestamp.
+    //
+    // Collection: settings
+    // Document ID: userId
+    // Fields:
+    //   - merchandiseExpenses: number (optional, >= 0) - Total merchandise expenses.
+    //   - stockPercentage: number (optional, 0-100) - Current stock percentage.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
+          (request.auth.token.email == "Sean.Janselme@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidMarket(data) {
+      return data.keys().hasAll(['uid', 'marketName', 'date', 'cashGains', 'cardGains', 'expenses', 'satisfaction', 'createdAt']) &&
+             data.uid is string &&
+             data.marketName is string && data.marketName.size() > 0 && data.marketName.size() <= 100 &&
+             data.date is string &&
+             data.cashGains is number && data.cashGains >= 0 &&
+             data.cardGains is number && data.cardGains >= 0 &&
+             data.expenses is number && data.expenses >= 0 &&
+             data.satisfaction is number && data.satisfaction >= 0 && data.satisfaction <= 5 &&
+             (!('photoUrl' in data) || data.photoUrl is string) &&
+             data.createdAt is string;
+    }
+
+    match /markets/{marketId} {
+      allow list: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow get: if isAuthenticated() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.uid && isValidMarket(request.resource.data);
+      allow update: if isAuthenticated() && (isDocOwner() || isAdmin()) && request.auth.uid == request.resource.data.uid && isValidMarket(request.resource.data);
+      allow delete: if isAuthenticated() && (isDocOwner() || isAdmin());
+    }
+    
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /settings/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+  }
+}
