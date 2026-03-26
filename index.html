@@ -2,59 +2,74 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- CONFIGURATION PLEIN ÉCRAN & ICÔNE -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Marché Pro">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- ICÔNE PERSONNALISÉE (Carré orange, M blanc et noir superposés) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48dGV4dCB4PSIyNjUiIHk9IjMyNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuNSI+TTwvdGV4dD48dGV4dCB4PSIyNTUiIHk9IjMxNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk08L3RleHQ+PC9zdmc+">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48dGV4dCB4PSIyNjUiIHk9IjMyNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuNSI+TTwvdGV4dD48dGV4dCB4PSIyNTUiIHk9IjMxNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk08L3RleHQ+PC9zdmc+">
+
     <title>Marché Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: { orange: { 50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74', 400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c', 800: '#9a3412', 900: '#7c2d12' } }
+                }
+            }
+        }
+    </script>
+    
     <style>
-        body { 
-            background-color: #050505; 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
-            overflow-x: hidden; 
-        }
-        .glass { 
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-        }
-        #root { min-height: 100vh; }
-        .loader { 
-            border: 3px solid rgba(255,255,255,0.1); 
-            border-top: 3px solid #f97316; 
-            border-radius: 50%; 
-            width: 40px; 
-            height: 40px; 
-            animation: spin 1s linear infinite; 
-        }
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
+        body { background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; margin: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #f97316; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="root">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
             <div class="loader"></div>
-            <p style="color: #666; font-size: 14px;">Chargement de Marché Manager...</p>
-            <noscript><p style="color: red;">Veuillez activer JavaScript pour utiliser cette application.</p></noscript>
+            <p style="color: #666; font-size: 14px; font-family: sans-serif;">Initialisation de Marché Manager Pro...</p>
         </div>
     </div>
 
-    <!-- Chargement des bibliothèques via ESM -->
     <script type="module">
-        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18.2.0';
         import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
-        import * as Lucide from 'https://esm.sh/lucide-react@0.284.0';
+        import { 
+            LayoutDashboard, PlusCircle, History, LogOut, TrendingUp, MapPin, Cloud, Sun, CloudRain, 
+            CloudLightning, Wind, Euro, Clock, Star, Trash2, ChevronRight, Search, Map as MapIcon, 
+            Settings, FileDown, RefreshCcw, Check, Camera, X, Filter, Info, Edit, ChevronLeft, Calendar
+        } from 'https://esm.sh/lucide-react@0.284.0';
+        import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@10.16.4';
+        import { 
+            BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
+        } from 'https://esm.sh/recharts@2.8.0';
+        import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isWithinInterval } from 'https://esm.sh/date-fns@2.30.0';
+        import { fr } from 'https://esm.sh/date-fns@2.30.0/locale';
         import { initializeApp } from 'https://esm.sh/firebase@10.4.0/app';
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://esm.sh/firebase@10.4.0/auth';
-        import { getFirestore, collection, query, where, onSnapshot, orderBy } from 'https://esm.sh/firebase@10.4.0/firestore';
+        import { 
+            getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc
+        } from 'https://esm.sh/firebase@10.4.0/firestore';
 
-        // === CONFIGURATION FIREBASE (récupérée depuis la console) ===
+        // --- CONFIGURATION FIREBASE ---
         const firebaseConfig = {
-            apiKey: "AIzaSyAXmSV5CP07yh8YiY5Nd4SyLdiFFeNU2ns",
+            apiKey: "AIzaSyAXmSV5CPO7yh8YiY5Nd4SyLdiFFeNU2ns",
             authDomain: "manager-marche-sj.firebaseapp.com",
             projectId: "manager-marche-sj",
             storageBucket: "manager-marche-sj.firebasestorage.app",
@@ -63,153 +78,328 @@
             measurementId: "G-L1XXS2SKDE"
         };
 
-        // --- INITIALISATION ---
-        let db, auth, provider;
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            provider = new GoogleAuthProvider();
-        } catch (e) {
-            console.error("Erreur Firebase :", e);
-            document.getElementById('root').innerHTML = `
-                <div style="padding: 40px; text-align: center; color: #ff4444;">
-                    <h2 style="margin-bottom: 20px;">Erreur de Configuration</h2>
-                    <p>L'application n'a pas pu démarrer.</p>
-                    <p style="font-size: 13px; margin-top: 15px;">Vérifiez la console pour plus de détails.</p>
-                </div>
-            `;
-        }
+        const cn = (...classes) => classes.filter(Boolean).join(' ');
+
+        const WeatherIcon = ({ type, className }) => {
+            const icons = { 'Soleil': Sun, 'Nuageux': Cloud, 'Pluie': CloudRain, 'Orage': CloudLightning, 'Vent': Wind };
+            const Icon = icons[type] || Sun;
+            return React.createElement(Icon, { className, size: 24 });
+        };
 
         function App() {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
             const [entries, setEntries] = useState([]);
             const [activeTab, setActiveTab] = useState('dashboard');
+            const [statsPeriod, setStatsPeriod] = useState('month');
+            const [selectedWeekDay, setSelectedWeekDay] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
+            const [selectedEntry, setSelectedEntry] = useState(null);
+            const [editingId, setEditingId] = useState(null);
+            const [formData, setFormData] = useState({
+                marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0,
+                startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0,
+                satisfaction: 3, tags: [], photoUrl: ''
+            });
 
             useEffect(() => {
-                if (!auth) return;
-                const unsubscribe = onAuthStateChanged(auth, (u) => {
-                    setUser(u);
-                    setLoading(false);
-                });
-                return unsubscribe;
+                return onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
             }, []);
 
             useEffect(() => {
-                if (!user || !db) return;
-                const q = query(
-                    collection(db, 'markets'), 
-                    where('uid', '==', user.uid), 
-                    orderBy('date', 'desc')
-                );
-                const unsubscribe = onSnapshot(q, (snapshot) => {
-                    setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+                if (!user) return;
+                const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
+                return onSnapshot(q, (snapshot) => {
+                    setEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
                 });
-                return unsubscribe;
             }, [user]);
 
-            if (loading) {
-                return React.createElement('div', { 
-                    className: "h-screen flex items-center justify-center" 
-                }, React.createElement('div', { className: "loader" }));
-            }
+            const stats = useMemo(() => {
+                const now = new Date();
+                let filtered = entries;
+                if (statsPeriod === 'month') {
+                    filtered = entries.filter(e => {
+                        const d = parseISO(e.date);
+                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                    });
+                } else if (statsPeriod === 'week') {
+                    const start = startOfWeek(now, { weekStartsOn: 1 });
+                    const end = endOfWeek(now, { weekStartsOn: 1 });
+                    filtered = entries.filter(e => isWithinInterval(parseISO(e.date), { start, end }));
+                }
+                const totalGains = filtered.reduce((acc, curr) => acc + curr.cashGains + curr.cardGains, 0);
+                const totalExpenses = filtered.reduce((acc, curr) => acc + curr.expenses, 0);
+                const totalKm = filtered.reduce((acc, curr) => acc + curr.kmTravelled, 0);
+                const fuelCost = totalKm * 0.20;
+                const netProfit = totalGains - totalExpenses - fuelCost;
+                const chartData = filtered.slice(0, 7).reverse().map(e => ({
+                    name: format(parseISO(e.date), 'dd/MM'),
+                    gains: e.cashGains + e.cardGains
+                }));
+                return { totalGains, totalExpenses, totalKm, fuelCost, netProfit, chartData };
+            }, [entries, statsPeriod]);
 
-            if (!user) {
-                return React.createElement('div', { 
-                    className: "h-screen flex flex-col items-center justify-center p-6 text-center" 
-                },
-                    React.createElement('h1', { 
-                        className: "text-4xl font-black text-orange-500 mb-2" 
-                    }, "MARCHÉ MANAGER"),
-                    React.createElement('p', { 
-                        className: "text-gray-500 mb-8" 
-                    }, "Connectez-vous pour gérer vos marchés"),
-                    React.createElement('button', { 
-                        onClick: () => signInWithPopup(auth, provider),
-                        className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:bg-gray-100 transition"
-                    }, 
-                        React.createElement('span', null, "Se connecter avec Google")
-                    )
-                );
-            }
+            const weekEntriesByDay = useMemo(() => {
+                const start = startOfWeek(new Date(), { weekStartsOn: 1 });
+                const days = eachDayOfInterval({ start, end: endOfWeek(new Date(), { weekStartsOn: 1 }) });
+                return days.map(day => entries.filter(e => isSameDay(parseISO(e.date), day)));
+            }, [entries]);
 
-            return React.createElement('div', { className: "max-w-md mx-auto p-4 pb-24" },
-                // Header
-                React.createElement('header', { className: "flex justify-between items-center mb-8" },
-                    React.createElement('div', null,
-                        React.createElement('h1', { 
-                            className: "text-xl font-black text-orange-500" 
-                        }, "MARCHÉ MANAGER"),
-                        React.createElement('p', { 
-                            className: "text-[10px] text-gray-500 font-bold uppercase" 
-                        }, user.displayName || user.email)
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    if (editingId) {
+                        await updateDoc(doc(db, 'markets', editingId), { ...formData, uid: user.uid, updatedAt: new Date().toISOString() });
+                    } else {
+                        await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
+                    }
+                    setFormData({ marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0, startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3, tags: [], photoUrl: '' });
+                    setEditingId(null);
+                    setActiveTab('dashboard');
+                } catch (error) { alert("Erreur: " + error.message); }
+            };
+
+            const handleEdit = (entry) => {
+                setFormData({ ...entry });
+                setEditingId(entry.id);
+                setSelectedEntry(null);
+                setActiveTab('form');
+            };
+
+            const handleDelete = async (id) => {
+                if (confirm("Supprimer définitivement ?")) {
+                    await deleteDoc(doc(db, 'markets', id));
+                    setSelectedEntry(null);
+                }
+            };
+
+            if (loading) return React.createElement('div', { className: "h-screen flex items-center justify-center" }, React.createElement('div', { className: "loader" }));
+
+            if (!user) return (
+                React.createElement('div', { className: "h-screen flex flex-col items-center justify-center p-6 text-center space-y-8" },
+                    React.createElement('div', { className: "space-y-2" },
+                        React.createElement('h1', { className: "text-5xl font-black tracking-tighter text-orange-500" }, "MARCHÉ MANAGER"),
+                        React.createElement('p', { className: "text-gray-500 font-medium" }, "Gérez votre rentabilité en un clin d'œil")
                     ),
-                    React.createElement('button', { 
-                        onClick: () => signOut(auth), 
-                        className: "p-2 bg-white/5 rounded-xl hover:bg-white/10 transition" 
-                    }, 
-                        React.createElement(Lucide.LogOut, { size: 20 })
+                    React.createElement('button', { onClick: () => signInWithPopup(auth, provider), className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-2xl active:scale-95 transition-transform" },
+                        React.createElement('img', { src: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg", className: "w-6 h-6" }),
+                        "Connexion avec Google"
                     )
-                ),
+                )
+            );
 
-                // Dashboard
-                activeTab === 'dashboard' && React.createElement('div', { className: "space-y-6" },
-                    React.createElement('div', { className: "grid grid-cols-2 gap-4" },
-                        React.createElement('div', { className: "glass p-5 rounded-3xl" },
-                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "TOTAL GAINS"),
-                            React.createElement('p', { 
-                                className: "text-2xl font-black text-orange-500" 
-                            }, 
-                                entries.reduce((acc, e) => acc + (e.cashGains || 0) + (e.cardGains || 0), 0) + " €"
+            return (
+                React.createElement('div', { className: "max-w-md mx-auto min-h-screen pb-32 pt-8 px-4" },
+                    React.createElement('header', { className: "flex justify-between items-center mb-10" },
+                        React.createElement('div', null,
+                            React.createElement('h1', { className: "text-2xl font-black text-orange-500 leading-none" }, "MARCHÉ MANAGER"),
+                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1" }, user.displayName)
+                        ),
+                        React.createElement('button', { onClick: () => signOut(auth), className: "p-2.5 bg-white/5 rounded-xl text-gray-500" }, React.createElement(LogOut, { size: 20 }))
+                    ),
+
+                    React.createElement(AnimatePresence, { mode: 'wait' },
+                        activeTab === 'dashboard' && React.createElement(motion.div, { key: "dash", initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0 }, className: "space-y-8" },
+                            React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                                React.createElement('div', { className: "glass p-6 rounded-[32px]" },
+                                    React.createElement('p', { className: "text-[10px] text-gray-500 uppercase font-bold mb-1" }, "Bénéfice Net"),
+                                    React.createElement('p', { className: "text-3xl font-black text-orange-500" }, stats.netProfit.toFixed(0), "€")
+                                ),
+                                React.createElement('div', { className: "glass p-6 rounded-[32px]" },
+                                    React.createElement('p', { className: "text-[10px] text-gray-500 uppercase font-bold mb-1" }, "Distance"),
+                                    React.createElement('p', { className: "text-3xl font-black" }, stats.totalKm, " km")
+                                )
+                            ),
+                            React.createElement('div', { className: "glass p-6 rounded-[32px] space-y-6" },
+                                React.createElement('div', { className: "flex justify-between items-center" },
+                                    React.createElement('h3', { className: "text-xs font-bold uppercase tracking-widest text-gray-500" }, "Performance"),
+                                    React.createElement('div', { className: "flex bg-black/40 p-1 rounded-xl" },
+                                        ['week', 'month'].map(p => React.createElement('button', { key: p, onClick: () => setStatsPeriod(p), className: cn("px-3 py-1 text-[10px] font-bold rounded-lg uppercase", statsPeriod === p ? "bg-orange-500 text-white" : "text-gray-500") }, p === 'week' ? 'Sem' : 'Mois'))
+                                    )
+                                ),
+                                React.createElement('div', { className: "h-48 w-full" },
+                                    React.createElement(ResponsiveContainer, { width: "100%", height: "100%" },
+                                        React.createElement(BarChart, { data: stats.chartData },
+                                            React.createElement(XAxis, { dataKey: "name", hide: true }),
+                                            React.createElement(Bar, { dataKey: "gains", radius: [6, 6, 0, 0] },
+                                                stats.chartData.map((_, i) => React.createElement(Cell, { key: i, fill: i === stats.chartData.length - 1 ? '#f97316' : '#333' }))
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: "space-y-4" },
+                                React.createElement('div', { className: "flex justify-between items-center" },
+                                    React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase tracking-widest" }, "Derniers Marchés"),
+                                    React.createElement('button', { onClick: () => setActiveTab('history'), className: "text-[10px] font-bold text-orange-500 uppercase" }, "Voir tout")
+                                ),
+                                entries.slice(0, 3).map(entry => 
+                                    React.createElement('div', { key: entry.id, onClick: () => setSelectedEntry(entry), className: "glass p-5 rounded-3xl flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform" },
+                                        React.createElement('div', { className: "flex items-center gap-4" },
+                                            React.createElement('div', { className: "w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center" }, React.createElement(WeatherIcon, { type: entry.weather, className: "text-orange-500" })),
+                                            React.createElement('div', null,
+                                                React.createElement('p', { className: "font-bold text-lg" }, entry.marketName),
+                                                React.createElement('p', { className: "text-[10px] text-gray-500 font-medium" }, format(parseISO(entry.date), 'dd MMM yyyy'))
+                                            )
+                                        ),
+                                        React.createElement('div', { className: "flex items-center gap-4" },
+                                            React.createElement('button', { onClick: (e) => { e.stopPropagation(); handleEdit(entry); }, className: "p-2 bg-white/5 rounded-xl text-gray-500" }, React.createElement(Edit, { size: 16 })),
+                                            React.createElement('p', { className: "font-black text-orange-500 text-lg" }, (entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.2)).toFixed(0), "€")
+                                        )
+                                    )
+                                )
                             )
                         ),
-                        React.createElement('div', { className: "glass p-5 rounded-3xl" },
-                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "MARCHÉS"),
-                            React.createElement('p', { 
-                                className: "text-2xl font-black" 
-                            }, entries.length)
-                        )
-                    ),
-                    React.createElement('div', { className: "space-y-4" },
-                        React.createElement('h3', { 
-                            className: "text-xs font-bold text-gray-500 uppercase" 
-                        }, "Dernières Activités"),
-                        ...entries.slice(0, 5).map(e => 
-                            React.createElement('div', { 
-                                key: e.id, 
-                                className: "glass p-4 rounded-2xl flex justify-between items-center" 
-                            },
-                                React.createElement('div', null,
-                                    React.createElement('p', { className: "font-bold" }, e.marketName || "Marché"),
-                                    React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date || "")
+
+                        activeTab === 'week' && React.createElement(motion.div, { key: "week", initial: { opacity: 0 }, animate: { opacity: 1 }, className: "space-y-6" },
+                            React.createElement('h2', { className: "text-3xl font-black" }, "Ma Semaine"),
+                            React.createElement('div', { className: "flex gap-2 overflow-x-auto no-scrollbar pb-2" },
+                                ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day, idx) => (
+                                    React.createElement('button', { key: day, onClick: () => setSelectedWeekDay(idx), className: cn("flex-1 min-w-[50px] py-4 rounded-2xl border transition-all flex flex-col items-center gap-1", selectedWeekDay === idx ? "bg-orange-500 border-orange-500 text-white" : "glass text-gray-500") },
+                                        React.createElement('span', { className: "text-[9px] font-bold uppercase" }, day),
+                                        React.createElement('span', { className: "text-sm font-black" }, format(eachDayOfInterval({ start: startOfWeek(new Date(), { weekStartsOn: 1 }), end: endOfWeek(new Date(), { weekStartsOn: 1 }) })[idx], 'dd'))
+                                    )
+                                ))
+                            ),
+                            React.createElement('div', { className: "space-y-4" },
+                                weekEntriesByDay[selectedWeekDay].length > 0 ? weekEntriesByDay[selectedWeekDay].map(entry => 
+                                    React.createElement('div', { key: entry.id, onClick: () => setSelectedEntry(entry), className: "glass p-5 rounded-[32px] space-y-4 cursor-pointer" },
+                                        React.createElement('div', { className: "flex justify-between items-start" },
+                                            React.createElement('div', { className: "flex gap-4" },
+                                                React.createElement('div', { className: "w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center" }, React.createElement(WeatherIcon, { type: entry.weather, className: "text-orange-500" })),
+                                                React.createElement('div', null,
+                                                    React.createElement('h4', { className: "font-bold text-lg" }, entry.marketName),
+                                                    React.createElement('p', { className: "text-xs text-gray-500" }, entry.startTime, " - ", entry.endTime)
+                                                )
+                                            ),
+                                            React.createElement('div', { className: "flex items-center gap-3" },
+                                                React.createElement('button', { onClick: (e) => { e.stopPropagation(); handleEdit(entry); }, className: "p-2 bg-white/5 rounded-xl text-gray-500" }, React.createElement(Edit, { size: 18 })),
+                                                React.createElement('div', { className: "text-right" },
+                                                    React.createElement('p', { className: "text-xl font-black text-orange-500" }, "+", (entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.2)).toFixed(0), "€"),
+                                                    React.createElement('p', { className: "text-[8px] text-gray-500 uppercase font-bold" }, "Net")
+                                                )
+                                            )
+                                        )
+                                    )
+                                ) : React.createElement('div', { className: "text-center py-20 glass rounded-[32px]" }, React.createElement('p', { className: "text-gray-500 font-medium" }, "Repos aujourd'hui !"))
+                            )
+                        ),
+
+                        activeTab === 'form' && React.createElement(motion.div, { key: "form", initial: { y: 20, opacity: 0 }, animate: { y: 0, opacity: 1 }, className: "space-y-8" },
+                            React.createElement('div', null,
+                                React.createElement('h2', { className: "text-4xl font-black leading-tight" }, editingId ? "MODIFIER" : "NOUVEAU", React.createElement('br'), "MARCHÉ"),
+                                React.createElement('p', { className: "text-gray-500 font-bold uppercase text-[10px] tracking-widest mt-2" }, "Saisissez vos données du jour")
+                            ),
+                            React.createElement('form', { onSubmit: handleSubmit, className: "space-y-5" },
+                                React.createElement('div', { className: "space-y-2" },
+                                    React.createElement('label', { className: "text-[10px] font-bold text-gray-500 uppercase ml-4" }, "Informations Générales"),
+                                    React.createElement('input', { type: "text", required: true, placeholder: "Nom du Marché", value: formData.marketName, onChange: e => setFormData({...formData, marketName: e.target.value}), className: "w-full glass p-5 rounded-3xl outline-none focus:border-orange-500 text-lg font-bold" }),
+                                    React.createElement('div', { className: "grid grid-cols-2 gap-3" },
+                                        React.createElement('input', { type: "date", value: formData.date, onChange: e => setFormData({...formData, date: e.target.value}), className: "glass p-5 rounded-3xl outline-none font-bold" }),
+                                        React.createElement('select', { value: formData.weather, onChange: e => setFormData({...formData, weather: e.target.value}), className: "glass p-5 rounded-3xl outline-none font-bold" },
+                                            ['Soleil', 'Nuageux', 'Pluie', 'Orage', 'Vent'].map(w => React.createElement('option', { key: w, value: w }, w))
+                                        )
+                                    )
                                 ),
-                                React.createElement('p', { 
-                                    className: "font-bold text-orange-500" 
-                                }, 
-                                    ((e.cashGains || 0) + (e.cardGains || 0)).toFixed(0) + " €"
+                                React.createElement('div', { className: "space-y-2" },
+                                    React.createElement('label', { className: "text-[10px] font-bold text-gray-500 uppercase ml-4" }, "Chiffre d'Affaires"),
+                                    React.createElement('div', { className: "grid grid-cols-2 gap-3" },
+                                        React.createElement('div', { className: "relative" },
+                                            React.createElement('input', { type: "number", placeholder: "Espèces", value: formData.cashGains || '', onChange: e => setFormData({...formData, cashGains: Number(e.target.value)}), className: "w-full glass p-5 rounded-3xl outline-none font-black text-xl" }),
+                                            React.createElement('span', { className: "absolute right-5 top-1/2 -translate-y-1/2 text-gray-600 font-bold" }, "€")
+                                        ),
+                                        React.createElement('div', { className: "relative" },
+                                            React.createElement('input', { type: "number", placeholder: "Carte", value: formData.cardGains || '', onChange: e => setFormData({...formData, cardGains: Number(e.target.value)}), className: "w-full glass p-5 rounded-3xl outline-none font-black text-xl" }),
+                                            React.createElement('span', { className: "absolute right-5 top-1/2 -translate-y-1/2 text-gray-600 font-bold" }, "€")
+                                        )
+                                    )
+                                ),
+                                React.createElement('div', { className: "grid grid-cols-2 gap-3" },
+                                    React.createElement('div', { className: "space-y-2" },
+                                        React.createElement('label', { className: "text-[10px] font-bold text-gray-500 uppercase ml-4" }, "Frais"),
+                                        React.createElement('input', { type: "number", placeholder: "Place, etc.", value: formData.expenses || '', onChange: e => setFormData({...formData, expenses: Number(e.target.value)}), className: "w-full glass p-5 rounded-3xl outline-none font-bold" })
+                                    ),
+                                    React.createElement('div', { className: "space-y-2" },
+                                        React.createElement('label', { className: "text-[10px] font-bold text-gray-500 uppercase ml-4" }, "Kilomètres"),
+                                        React.createElement('input', { type: "number", placeholder: "Aller-Retour", value: formData.kmTravelled || '', onChange: e => setFormData({...formData, kmTravelled: Number(e.target.value)}), className: "w-full glass p-5 rounded-3xl outline-none font-bold" })
+                                    )
+                                ),
+                                React.createElement('div', { className: "flex gap-3 pt-4" },
+                                    editingId && React.createElement('button', { type: "button", onClick: () => { setEditingId(null); setActiveTab('dashboard'); }, className: "flex-1 glass p-5 rounded-3xl font-bold uppercase tracking-widest" }, "Annuler"),
+                                    React.createElement('button', { type: "submit", className: "flex-[2] bg-orange-500 p-5 rounded-3xl font-black text-lg shadow-xl shadow-orange-500/20 active:scale-95 transition-transform" }, editingId ? "METTRE À JOUR" : "ENREGISTRER")
+                                )
+                            )
+                        ),
+
+                        activeTab === 'history' && React.createElement(motion.div, { key: "hist", initial: { opacity: 0 }, animate: { opacity: 1 }, className: "space-y-6" },
+                            React.createElement('h2', { className: "text-3xl font-black" }, "Historique"),
+                            React.createElement('div', { className: "space-y-4" },
+                                entries.map(entry => 
+                                    React.createElement('div', { key: entry.id, onClick: () => setSelectedEntry(entry), className: "glass p-5 rounded-[32px] flex items-center justify-between cursor-pointer" },
+                                        React.createElement('div', { className: "flex items-center gap-4" },
+                                            React.createElement('div', { className: "w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center" }, React.createElement(WeatherIcon, { type: entry.weather, className: "text-orange-500" })),
+                                            React.createElement('div', null,
+                                                React.createElement('p', { className: "font-bold text-lg" }, entry.marketName),
+                                                React.createElement('p', { className: "text-[10px] text-gray-500 font-bold" }, format(parseISO(entry.date), 'dd MMMM yyyy', { locale: fr }))
+                                            )
+                                        ),
+                                        React.createElement('div', { className: "flex items-center gap-4" },
+                                            React.createElement('button', { onClick: (e) => { e.stopPropagation(); handleEdit(entry); }, className: "p-2 bg-white/5 rounded-xl text-gray-500" }, React.createElement(Edit, { size: 18 })),
+                                            React.createElement('p', { className: "font-black text-orange-500 text-lg" }, (entry.cashGains + entry.cardGains - entry.expenses).toFixed(0), "€")
+                                        )
+                                    )
                                 )
                             )
                         )
-                    )
-                ),
+                    ),
 
-                // Navigation
-                React.createElement('nav', { 
-                    className: "fixed bottom-6 left-4 right-4 glass rounded-3xl p-2 flex justify-around items-center" 
-                },
-                    [
-                        { id: 'dashboard', icon: Lucide.LayoutDashboard, label: 'Accueil' },
-                        { id: 'history', icon: Lucide.History, label: 'Journal' }
-                    ].map(item => 
-                        React.createElement('button', { 
-                            key: item.id, 
-                            onClick: () => setActiveTab(item.id),
-                            className: `flex flex-col items-center p-3 rounded-2xl transition ${activeTab === item.id ? 'bg-orange-500 text-white' : 'text-gray-500 hover:text-white'}`
-                        }, 
-                            React.createElement(item.icon, { size: 20 }),
-                            React.createElement('span', { className: "text-[10px] mt-1" }, item.label)
+                    React.createElement('nav', { className: "fixed bottom-8 left-6 right-6 glass rounded-[32px] p-2 flex justify-around items-center z-50 shadow-2xl" },
+                        [
+                            { id: 'dashboard', icon: LayoutDashboard, label: 'Bord' },
+                            { id: 'week', icon: Calendar, label: 'Sem' },
+                            { id: 'form', icon: PlusCircle, label: 'Ajout' },
+                            { id: 'history', icon: History, label: 'Journal' }
+                        ].map(item => 
+                            React.createElement('button', { 
+                                key: item.id, 
+                                onClick: () => { setActiveTab(item.id); setEditingId(null); },
+                                className: cn("flex flex-col items-center p-4 rounded-2xl transition-all", activeTab === item.id ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-gray-500")
+                            },
+                                React.createElement(item.icon, { size: 22 }),
+                                React.createElement('span', { className: "text-[8px] font-black uppercase mt-1 tracking-tighter" }, item.label)
+                            )
+                        )
+                    ),
+
+                    React.createElement(AnimatePresence, null,
+                        selectedEntry && React.createElement(motion.div, { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, className: "fixed inset-0 bg-black/90 backdrop-blur-md z-[100] p-4 flex items-end" },
+                            React.createElement(motion.div, { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" }, className: "w-full glass rounded-[48px] p-10 space-y-8 max-h-[90vh] overflow-y-auto no-scrollbar" },
+                                React.createElement('div', { className: "flex justify-between items-start" },
+                                    React.createElement('div', null,
+                                        React.createElement('h2', { className: "text-4xl font-black" }, selectedEntry.marketName),
+                                        React.createElement('p', { className: "text-gray-500 font-bold uppercase text-xs mt-2" }, format(parseISO(selectedEntry.date), 'EEEE dd MMMM yyyy', { locale: fr }))
+                                    ),
+                                    React.createElement('button', { onClick: () => setSelectedEntry(null), className: "p-3 bg-white/10 rounded-full" }, React.createElement(X, { size: 24 }))
+                                ),
+                                React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                                    React.createElement('div', { className: "bg-white/5 p-6 rounded-[32px]" }, React.createElement('p', { className: "text-[10px] text-gray-500 font-bold uppercase mb-2" }, "Bénéfice Net"), React.createElement('p', { className: "text-3xl font-black text-orange-500" }, (selectedEntry.cashGains + selectedEntry.cardGains - selectedEntry.expenses - (selectedEntry.kmTravelled * 0.2)).toFixed(2), "€")),
+                                    React.createElement('div', { className: "bg-white/5 p-6 rounded-[32px]" }, React.createElement('p', { className: "text-[10px] text-gray-500 font-bold uppercase mb-2" }, "Météo"), React.createElement('div', { className: "flex items-center gap-3" }, React.createElement(WeatherIcon, { type: selectedEntry.weather, className: "text-orange-500" }), React.createElement('span', { className: "font-bold" }, selectedEntry.weather)))
+                                ),
+                                React.createElement('div', { className: "space-y-4" },
+                                    React.createElement('div', { className: "flex justify-between p-4 border-b border-white/5" }, React.createElement('span', { className: "text-gray-500 font-bold" }, "Espèces"), React.createElement('span', { className: "font-black" }, selectedEntry.cashGains, "€")),
+                                    React.createElement('div', { className: "flex justify-between p-4 border-b border-white/5" }, React.createElement('span', { className: "text-gray-500 font-bold" }, "Carte Bancaire"), React.createElement('span', { className: "font-black" }, selectedEntry.cardGains, "€")),
+                                    React.createElement('div', { className: "flex justify-between p-4 border-b border-white/5" }, React.createElement('span', { className: "text-gray-500 font-bold" }, "Frais de place"), React.createElement('span', { className: "font-black text-red-500" }, "-", selectedEntry.expenses, "€")),
+                                    React.createElement('div', { className: "flex justify-between p-4 border-b border-white/5" }, React.createElement('span', { className: "text-gray-500 font-bold" }, "Carburant (est.)"), React.createElement('span', { className: "font-black text-red-500" }, "-", (selectedEntry.kmTravelled * 0.2).toFixed(2), "€"))
+                                ),
+                                React.createElement('div', { className: "grid grid-cols-2 gap-4 pt-4" },
+                                    React.createElement('button', { onClick: () => handleEdit(selectedEntry), className: "w-full py-5 rounded-3xl border border-orange-500/20 text-orange-500 font-black uppercase tracking-widest" }, "Modifier"),
+                                    React.createElement('button', { onClick: () => handleDelete(selectedEntry.id), className: "w-full py-5 rounded-3xl border border-red-500/20 text-red-500 font-black uppercase tracking-widest" }, "Supprimer")
+                                )
+                            )
                         )
                     )
                 )
