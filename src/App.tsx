@@ -63,6 +63,7 @@ import {
   LineChart, 
   Line,
   Cell,
+  LabelList,
   PieChart,
   Pie
 } from 'recharts';
@@ -104,6 +105,7 @@ interface MarketEntry {
   cardGains: number;
   expenses: number;
   satisfaction: number;
+  description?: string;
   tags?: string[];
   photoUrl?: string;
   createdAt: string;
@@ -113,28 +115,20 @@ interface MarketEntry {
 
 const Logo = ({ className = "w-12 h-12" }: { className?: string }) => (
   <div className={cn("relative flex items-center justify-center", className)}>
-    <svg viewBox="0 0 100 100" className="w-full h-full fill-none stroke-current">
-      {/* Abstract M.M Logo */}
-      <motion.path
-        d="M20 80 L35 20 L50 50 L65 20 L80 80"
-        strokeWidth="10"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0 }}
-        animate={{ pathLength: 1 }}
-        transition={{ duration: 2, repeat: Infinity, repeatType: "reverse" }}
-        className="text-orange-500"
-      />
-      <motion.path
-        d="M20 85 L35 25 L50 55 L65 25 L80 85"
-        strokeWidth="4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={{ pathLength: 0, opacity: 0 }}
-        animate={{ pathLength: 1, opacity: 0.3 }}
-        transition={{ duration: 2, delay: 0.5, repeat: Infinity, repeatType: "reverse" }}
-        className="text-white"
-      />
+    <svg viewBox="0 0 100 100" className="w-full h-full">
+      {/* Orange Background */}
+      <rect width="100" height="100" rx="22" fill="#FF5F00" />
+      
+      {/* White M Base */}
+      <path d="M22 42 L22 71 L30 71 L30 42 Z" fill="white" />
+      <path d="M30 42 L43 62 L56 42 L56 71 L64 71 L64 42 L56 42 L43 56 L30 42 Z" fill="white" />
+      <path d="M64 42 L64 71 L72 71 L72 42 Z" fill="white" />
+      
+      {/* Awning */}
+      <path d="M22 42 C22 38 25 36 28 36 L58 36 C61 36 64 38 64 42 L64 46 C64 46 61 44 58 44 C55 44 52 46 52 46 C52 46 49 44 46 44 C43 44 40 46 40 46 C40 46 37 44 34 44 C31 44 28 46 28 46 C28 46 25 44 22 44 Z" fill="white" />
+      
+      {/* Black Swoosh */}
+      <path d="M43 71 C43 71 55 50 78 31 L78 41 C78 41 60 55 50 71 Z" fill="#1A1A1A" />
     </svg>
   </div>
 );
@@ -153,11 +147,11 @@ const WeatherIcon = ({ type, className }: { type: string, className?: string }) 
 
 const SatisfactionStars = ({ rating }: { rating: number }) => {
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-0.5 flex-shrink-0">
       {[...Array(5)].map((_, i) => (
         <Star 
           key={i} 
-          size={12} 
+          size={10} 
           className={i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-600"} 
         />
       ))}
@@ -220,6 +214,7 @@ function App() {
   const [isEditingExpenses, setIsEditingExpenses] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<MarketEntry | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   
   // Form State
@@ -234,6 +229,7 @@ function App() {
     cardGains: 0,
     expenses: 0,
     satisfaction: 3,
+    description: '',
     tags: [] as string[],
     photoUrl: ''
   });
@@ -439,34 +435,40 @@ function App() {
     if (!user) return;
 
     try {
-      await addDoc(collection(db, 'markets'), {
+      const dataToSave = {
         ...formData,
         uid: user.uid,
-        createdAt: new Date().toISOString()
+        createdAt: editingId ? entries.find(e => e.id === editingId)?.createdAt : new Date().toISOString()
+      };
+
+      if (editingId) {
+        await setDoc(doc(db, 'markets', editingId), dataToSave);
+        showNotification("Marché mis à jour !", 'success');
+      } else {
+        await addDoc(collection(db, 'markets'), dataToSave);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      }
+      
+      setFormData({
+        marketName: '',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        weather: 'Soleil',
+        kmTravelled: 0,
+        startTime: '08:00',
+        endTime: '13:00',
+        cashGains: 0,
+        cardGains: 0,
+        expenses: 0,
+        satisfaction: 5,
+        description: '',
+        tags: [],
+        photoUrl: ''
       });
-      
-      setShowSuccess(true);
-      
-      setTimeout(() => {
-        setShowSuccess(false);
-        setFormData({
-          marketName: '',
-          date: format(new Date(), 'yyyy-MM-dd'),
-          weather: 'Soleil',
-          kmTravelled: 0,
-          startTime: '08:00',
-          endTime: '13:00',
-          cashGains: 0,
-          cardGains: 0,
-          expenses: 0,
-          satisfaction: 5,
-          tags: [],
-          photoUrl: ''
-        });
-        setActiveTab('dashboard');
-      }, 1500);
+      setEditingId(null);
+      setActiveTab('dashboard');
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'markets');
+      handleFirestoreError(error, OperationType.WRITE, 'markets');
     }
   };
 
@@ -760,6 +762,7 @@ function App() {
                         {stats.chartData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={index === stats.chartData.length - 1 ? '#f97316' : '#333'} />
                         ))}
+                        <LabelList dataKey="gains" position="top" fill="#f97316" fontSize={10} offset={10} formatter={(val: number) => val > 0 ? `${val}€` : ''} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -913,7 +916,7 @@ function App() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              <h2 className="text-2xl font-bold mb-6">Nouveau Marché</h2>
+              <h2 className="text-2xl font-bold mb-6">{editingId ? "Modifier le Marché" : "Nouveau Marché"}</h2>
               <form onSubmit={handleSubmit} className="space-y-6 pb-12">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -990,15 +993,16 @@ function App() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Km</label>
-                      <input 
-                        type="number" 
-                        value={formData.kmTravelled}
-                        onChange={e => setFormData({...formData, kmTravelled: Number(e.target.value)})}
-                        className="w-full bg-[#141414] border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-orange-500"
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Km</label>
+                        <input 
+                          type="number" 
+                          value={formData.kmTravelled}
+                          onFocus={(e) => e.target.select()}
+                          onChange={e => setFormData({...formData, kmTravelled: Number(e.target.value)})}
+                          className="w-full bg-[#141414] border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-orange-500"
+                        />
+                      </div>
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Début</label>
                       <input 
@@ -1028,6 +1032,7 @@ function App() {
                           type="number" 
                           required
                           value={formData.cashGains}
+                          onFocus={(e) => e.target.select()}
                           onChange={e => setFormData({...formData, cashGains: Number(e.target.value)})}
                           className="w-full bg-[#0a0a0a] border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-orange-500"
                         />
@@ -1038,6 +1043,7 @@ function App() {
                           type="number" 
                           required
                           value={formData.cardGains}
+                          onFocus={(e) => e.target.select()}
                           onChange={e => setFormData({...formData, cardGains: Number(e.target.value)})}
                           className="w-full bg-[#0a0a0a] border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-orange-500"
                         />
@@ -1049,6 +1055,7 @@ function App() {
                         type="number" 
                         required
                         value={formData.expenses}
+                        onFocus={(e) => e.target.select()}
                         onChange={e => setFormData({...formData, expenses: Number(e.target.value)})}
                         className="w-full bg-[#0a0a0a] border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-orange-500"
                       />
@@ -1059,6 +1066,16 @@ function App() {
                         {formData.cashGains + formData.cardGains - formData.expenses}€
                       </span>
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Description / Notes</label>
+                    <textarea 
+                      value={formData.description}
+                      onChange={e => setFormData({...formData, description: e.target.value})}
+                      className="w-full bg-[#141414] border border-white/10 rounded-2xl py-4 px-5 focus:outline-none focus:border-orange-500 min-h-[100px] resize-none"
+                      placeholder="Notes particulières sur ce marché..."
+                    />
                   </div>
 
                   <div className="space-y-4">
@@ -1176,32 +1193,34 @@ function App() {
                     <div className="flex justify-between items-center">
                       <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Note du Marché (0-5)</label>
                     </div>
-                    <div className="flex justify-between items-center bg-[#141414] p-4 rounded-2xl border border-white/10">
-                      <div className="flex gap-2">
-                        {[0, 1, 2, 3, 4, 5].map((num) => (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => setFormData({ ...formData, satisfaction: num })}
-                            className={cn(
-                              "w-10 h-10 rounded-xl flex items-center justify-center transition-all font-bold",
-                              formData.satisfaction === num 
-                                ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" 
-                                : "bg-black/40 text-gray-500 hover:text-gray-300"
-                            )}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star 
-                            key={i} 
-                            size={20} 
-                            className={i < formData.satisfaction ? "fill-yellow-400 text-yellow-400" : "text-gray-800"} 
-                          />
-                        ))}
+                    <div className="flex flex-col gap-4 bg-[#141414] p-4 rounded-2xl border border-white/10">
+                      <div className="flex justify-between items-center">
+                        <div className="flex gap-1.5 flex-wrap">
+                          {[0, 1, 2, 3, 4, 5].map((num) => (
+                            <button
+                              key={num}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, satisfaction: num })}
+                              className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center transition-all font-bold text-xs",
+                                formData.satisfaction === num 
+                                  ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" 
+                                  : "bg-black/40 text-gray-500 hover:text-gray-300"
+                              )}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex gap-0.5 flex-shrink-0">
+                          {[...Array(5)].map((_, i) => (
+                            <Star 
+                              key={i} 
+                              size={16} 
+                              className={i < formData.satisfaction ? "fill-yellow-400 text-yellow-400" : "text-gray-800"} 
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1475,6 +1494,11 @@ function App() {
 
                 <div className="space-y-4">
                   <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Détails de la journée</h4>
+                  {selectedEntry.description && (
+                    <div className="bg-orange-500/5 border border-orange-500/10 p-4 rounded-2xl">
+                      <p className="text-xs text-gray-400 italic leading-relaxed">"{selectedEntry.description}"</p>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-center gap-3 bg-[#141414] p-4 rounded-2xl border border-white/5">
                       <WeatherIcon type={selectedEntry.weather} className="text-orange-500" />
@@ -1544,17 +1568,44 @@ function App() {
                   </div>
                 )}
 
-                <button 
-                  onClick={() => {
-                    if (selectedEntry.id) {
-                      handleDelete(selectedEntry.id);
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => {
+                      setFormData({
+                        marketName: selectedEntry.marketName,
+                        date: selectedEntry.date,
+                        weather: selectedEntry.weather,
+                        kmTravelled: selectedEntry.kmTravelled,
+                        startTime: selectedEntry.startTime,
+                        endTime: selectedEntry.endTime,
+                        cashGains: selectedEntry.cashGains,
+                        cardGains: selectedEntry.cardGains,
+                        expenses: selectedEntry.expenses,
+                        satisfaction: selectedEntry.satisfaction,
+                        description: selectedEntry.description || '',
+                        tags: selectedEntry.tags || [],
+                        photoUrl: selectedEntry.photoUrl || ''
+                      });
+                      setEditingId(selectedEntry.id || null);
+                      setActiveTab('form');
                       setSelectedEntry(null);
-                    }
-                  }}
-                  className="w-full py-4 rounded-2xl border border-red-500/20 text-red-500 font-bold text-sm hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Trash2 size={16} /> Supprimer ce marché
-                </button>
+                    }}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-white font-bold text-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2 border border-white/5"
+                  >
+                    Modifier
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (selectedEntry.id) {
+                        handleDelete(selectedEntry.id);
+                        setSelectedEntry(null);
+                      }
+                    }}
+                    className="flex-1 py-4 rounded-2xl border border-red-500/20 text-red-500 font-bold text-sm hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Trash2 size={16} /> Supprimer
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -1594,11 +1645,14 @@ function App() {
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-[#0a0a0a]/80 backdrop-blur-2xl border-t border-white/5 p-4 pb-8 z-50">
-        <div className="max-w-md mx-auto flex justify-around items-center">
+        <div className="max-w-md mx-auto flex justify-between items-center px-2">
           <button 
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => {
+              setActiveTab('dashboard');
+              setEditingId(null);
+            }}
             className={cn(
-              "flex flex-col items-center gap-1 transition-all",
+              "flex flex-col items-center gap-1 transition-all w-16",
               activeTab === 'dashboard' ? "text-orange-500 scale-110" : "text-gray-500"
             )}
           >
@@ -1607,9 +1661,12 @@ function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('week')}
+            onClick={() => {
+              setActiveTab('week');
+              setEditingId(null);
+            }}
             className={cn(
-              "flex flex-col items-center gap-1 transition-all",
+              "flex flex-col items-center gap-1 transition-all w-16",
               activeTab === 'week' ? "text-orange-500 scale-110" : "text-gray-500"
             )}
           >
@@ -1618,9 +1675,29 @@ function App() {
           </button>
           
           <button 
-            onClick={() => setActiveTab('form')}
+            onClick={() => {
+              if (activeTab !== 'form') {
+                setFormData({
+                  marketName: '',
+                  date: format(new Date(), 'yyyy-MM-dd'),
+                  weather: 'Soleil',
+                  kmTravelled: 0,
+                  startTime: '08:00',
+                  endTime: '13:00',
+                  cashGains: 0,
+                  cardGains: 0,
+                  expenses: 0,
+                  satisfaction: 5,
+                  description: '',
+                  tags: [],
+                  photoUrl: ''
+                });
+                setEditingId(null);
+              }
+              setActiveTab('form');
+            }}
             className={cn(
-              "w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/20 -mt-8 transition-all active:scale-90",
+              "w-14 h-14 bg-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/20 -mt-8 transition-all active:scale-90 flex-shrink-0",
               activeTab === 'form' ? "scale-110 rotate-90" : ""
             )}
           >
@@ -1628,9 +1705,12 @@ function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('history')}
+            onClick={() => {
+              setActiveTab('history');
+              setEditingId(null);
+            }}
             className={cn(
-              "flex flex-col items-center gap-1 transition-all",
+              "flex flex-col items-center gap-1 transition-all w-16",
               activeTab === 'history' ? "text-orange-500 scale-110" : "text-gray-500"
             )}
           >
@@ -1639,9 +1719,12 @@ function App() {
           </button>
 
           <button 
-            onClick={() => setActiveTab('settings')}
+            onClick={() => {
+              setActiveTab('settings');
+              setEditingId(null);
+            }}
             className={cn(
-              "flex flex-col items-center gap-1 transition-all",
+              "flex flex-col items-center gap-1 transition-all w-16",
               activeTab === 'settings' ? "text-orange-500 scale-110" : "text-gray-500"
             )}
           >

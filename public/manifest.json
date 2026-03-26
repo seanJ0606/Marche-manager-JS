@@ -1,6 +1,6 @@
 {
   "name": "Marché Manager",
-  "short_name": "Marché Mgr",
+  "short_name": "Marché Manager",
   "description": "Gestionnaire de gains et frais pour commerçants ambulants",
   "start_url": "/",
   "display": "standalone",
