@@ -555,7 +555,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center gap-8">
+      <div className="min-h-dvh bg-[#0a0a0a] flex flex-col items-center justify-center gap-8">
         <motion.div
           animate={{ 
             scale: [1, 1.1, 1],
@@ -582,7 +582,7 @@ function App() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-dvh bg-[#0a0a0a] text-white flex flex-col items-center justify-center p-6 text-center">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -615,7 +615,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans pb-24">
+    <div className="min-h-dvh bg-[#0a0a0a] text-white font-sans pb-24">
       {/* Header */}
       <header className="p-6 flex justify-between items-center border-b border-white/5 sticky top-0 bg-[#0a0a0a]/80 backdrop-blur-xl z-50">
         <div>
