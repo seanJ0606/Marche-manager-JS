@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- CONFIGURATION PLEIN ÉCRAN & ICÔNE -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Marché Pro">
+    <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- ICÔNE PWA -->
+    <!-- ICÔNE PERSONNALISÉE (Carré orange, M blanc et noir superposés) -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48dGV4dCB4PSIyNjUiIHk9IjMyNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuNSI+TTwvdGV4dD48dGV4dCB4PSIyNTUiIHk9IjMxNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk08L3RleHQ+PC9zdmc+">
 
     <title>Marché Manager Pro</title>
@@ -19,7 +22,7 @@
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #f97316; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #error-overlay { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #cc0000; color: white; font-size: 13px; z-index: 9999; display: none; text-align: center; }
+        #error-overlay { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #cc0000; color: white; font-size: 13px; z-index: 9999; display: none; text-align: center; font-weight: bold; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
@@ -28,20 +31,19 @@
     <div id="root">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
             <div class="loader"></div>
-            <p style="color: #666; font-size: 14px;">Tentative de connexion...</p>
-            <div id="help-msg" style="display:none; text-align:center; padding: 0 40px; color: #444; font-size: 11px;">
-                Si rien ne se passe, vérifiez que vous avez bien créé la base "Cloud Firestore" dans votre console Firebase.
-            </div>
+            <p style="color: #666; font-size: 14px;">Initialisation de Marché Manager Pro...</p>
         </div>
     </div>
 
     <script type="module">
-        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        // Importation stable depuis le CDN officiel de Google
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+        
+        import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18.2.0';
         import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
         import * as Lucide from 'https://esm.sh/lucide-react@0.284.0';
-        import { initializeApp } from 'https://esm.sh/firebase@10.4.0/app';
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://esm.sh/firebase@10.4.0/auth';
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from 'https://esm.sh/firebase@10.4.0/firestore';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAXmSV5CPO7yh8YiY5Nd4SyLdiFFeNU2ns",
@@ -56,19 +58,16 @@
         const logError = (msg) => {
             const overlay = document.getElementById('error-overlay');
             overlay.style.display = 'block';
-            overlay.innerHTML = "<strong>ERREUR :</strong> " + msg;
+            overlay.innerHTML = "⚠️ " + msg;
         };
-
-        setTimeout(() => { document.getElementById('help-msg').style.display = 'block'; }, 6000);
 
         let db, auth, provider;
         try {
             const app = initializeApp(firebaseConfig);
             auth = getAuth(app);
-            provider = new GoogleAuthProvider();
-            // On essaie d'initialiser Firestore avec un délai
             db = getFirestore(app);
-        } catch (e) { logError("Initialisation : " + e.message); }
+            provider = new GoogleAuthProvider();
+        } catch (e) { logError("Erreur d'initialisation : " + e.message); }
 
         function App() {
             const [user, setUser] = useState(null);
@@ -82,39 +81,26 @@
                 return onAuthStateChanged(auth, (u) => {
                     setUser(u);
                     setLoading(false);
-                }, (err) => logError("Auth : " + err.message));
+                }, (err) => logError("Erreur Auth : " + err.message));
             }, []);
 
             useEffect(() => {
                 if (!user || !db) return;
-                try {
-                    const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
-                    const unsub = onSnapshot(q, (snap) => {
-                        setEntries(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-                    }, (err) => {
-                        console.error(err);
-                        if (err.message.includes('available') || err.message.includes('permission')) {
-                            logError("Firestore n'est pas prêt. Vérifiez : 1. Base 'Cloud Firestore' créée ? 2. Mode 'Test' activé ?");
-                        }
-                    });
-                    return unsub;
-                } catch (e) { console.error(e); }
+                const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
+                return onSnapshot(q, (snapshot) => {
+                    setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+                }, (err) => logError("Erreur Firestore : " + err.message));
             }, [user]);
-
-            const handleLogin = async () => {
-                try {
-                    await signInWithPopup(auth, provider);
-                } catch (e) {
-                    logError("Connexion impossible. Avez-vous ajouté 'seanj0606.github.io' dans les domaines autorisés de Firebase ?");
-                }
-            };
 
             if (loading) return React.createElement('div', { className: "h-screen flex items-center justify-center" }, React.createElement('div', { className: "loader" }));
 
             if (!user) return React.createElement('div', { className: "h-screen flex flex-col items-center justify-center p-6 text-center" },
                 React.createElement('h1', { className: "text-4xl font-black text-orange-500 mb-2" }, "MARCHÉ MANAGER"),
-                React.createElement('p', { className: "text-gray-500 mb-8" }, "Gérez vos marchés en temps réel"),
-                React.createElement('button', { onClick: handleLogin, className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3" }, "Se connecter avec Google")
+                React.createElement('p', { className: "text-gray-500 mb-8" }, "Gérez vos marchés en un clin d'œil"),
+                React.createElement('button', { 
+                    onClick: () => signInWithPopup(auth, provider).catch(e => logError("Connexion bloquée : " + e.message)),
+                    className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl"
+                }, "Se connecter avec Google")
             );
 
             return React.createElement('div', { className: "max-w-md mx-auto p-4 pb-24" },
@@ -145,7 +131,7 @@
                                 React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date)
                             ),
                             React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains).toFixed(0), "€")
-                        )) : React.createElement('p', { className: "text-center text-gray-600 py-10" }, "Aucune donnée trouvée")
+                        )) : React.createElement('p', { className: "text-center text-gray-600 py-10" }, "Aucun marché enregistré")
                     )
                 ),
 
@@ -154,11 +140,9 @@
                     React.createElement('form', { 
                         onSubmit: async (e) => {
                             e.preventDefault();
-                            try {
-                                await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
-                                setFormData({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0 });
-                                setActiveTab('dashboard');
-                            } catch (err) { alert("Erreur Firestore : " + err.message); }
+                            await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
+                            setFormData({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0 });
+                            setActiveTab('dashboard');
                         }, 
                         className: "space-y-4" 
                     },
