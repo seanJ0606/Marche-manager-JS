@@ -558,10 +558,9 @@ function App() {
       <div className="min-h-dvh bg-[#0a0a0a] flex flex-col items-center justify-center gap-8">
         <motion.div
           animate={{ 
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, -5, 0]
+            scale: [1, 1.05, 1]
           }}
-          transition={{ duration: 2, repeat: Infinity }}
+          transition={{ duration: 3, repeat: Infinity }}
         >
           <Logo className="w-24 h-24" />
         </motion.div>
@@ -588,7 +587,7 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full"
         >
-          <div className="w-24 h-24 bg-orange-500/10 rounded-[40px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-orange-500/10 border border-orange-500/20">
+          <div className="w-24 h-24 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-orange-500/10 border border-orange-500/20">
             <Logo className="w-16 h-16" />
           </div>
           <h1 className="text-4xl font-bold mb-2 tracking-tight">Marché Manager</h1>
@@ -603,7 +602,20 @@ function App() {
 
           <p className="text-gray-400 mb-12 text-lg">Gérez vos gains, vos frais et vos statistiques de commerçant en un clin d'œil.</p>
           <button 
-            onClick={signInWithGoogle}
+            type="button"
+            onClick={async () => {
+              try {
+                await signInWithGoogle();
+              } catch (error) {
+                console.error("Erreur de connexion:", error);
+                // Si l'erreur est liée au domaine non autorisé, on peut alerter l'utilisateur
+                if (error instanceof Error && error.message.includes('auth/unauthorized-domain')) {
+                  alert("Erreur : Ce domaine n'est pas autorisé dans la console Firebase. Veuillez ajouter votre domaine Netlify dans Authentication > Settings > Authorized domains.");
+                } else {
+                  alert("Une erreur est survenue lors de la connexion. Vérifiez la console pour plus de détails.");
+                }
+              }
+            }}
             className="w-full bg-white text-black font-semibold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-100 transition-all active:scale-95 shadow-xl"
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-6 h-6" />
