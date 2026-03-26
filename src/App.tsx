@@ -241,6 +241,31 @@ function App() {
 
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInfo, setAiInfo] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    show: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    message: string;
+    type: 'success' | 'error' | 'info';
+  }>({
+    show: false,
+    message: '',
+    type: 'info'
+  });
+
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -301,21 +326,32 @@ function App() {
 
   const handleResetData = async () => {
     if (!user) return;
-    if (window.confirm("ÊTES-VOUS SÛR ? Cette action supprimera TOUTES vos données d'historique définitivement.")) {
-      const confirm2 = window.confirm("Confirmez une deuxième fois pour valider la réinitialisation totale.");
-      if (confirm2) {
-        try {
-          const q = query(collection(db, 'markets'), where('uid', '==', user.uid));
-          const snapshot = await getDocs(q);
-          const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'markets', d.id)));
-          await Promise.all(deletePromises);
-          alert("Données réinitialisées avec succès.");
-        } catch (error) {
-          console.error("Error resetting data:", error);
-          alert("Erreur lors de la réinitialisation.");
-        }
+    
+    setConfirmModal({
+      show: true,
+      title: "Réinitialisation totale",
+      message: "ÊTES-VOUS SÛR ? Cette action supprimera TOUTES vos données d'historique définitivement.",
+      onConfirm: () => {
+        setConfirmModal({
+          show: true,
+          title: "Confirmation finale",
+          message: "Confirmez une deuxième fois pour valider la réinitialisation totale.",
+          onConfirm: async () => {
+            try {
+              const q = query(collection(db, 'markets'), where('uid', '==', user.uid));
+              const snapshot = await getDocs(q);
+              const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'markets', d.id)));
+              await Promise.all(deletePromises);
+              showNotification("Données réinitialisées avec succès.", 'success');
+            } catch (error) {
+              console.error("Error resetting data:", error);
+              showNotification("Erreur lors de la réinitialisation.", 'error');
+            }
+            setConfirmModal(prev => ({ ...prev, show: false }));
+          }
+        });
       }
-    }
+    });
   };
 
   const generatePDF = (type: 'full' | 'month') => {
@@ -435,13 +471,20 @@ function App() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Supprimer cette entrée ?")) {
-      try {
-        await deleteDoc(doc(db, 'markets', id));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `markets/${id}`);
+    setConfirmModal({
+      show: true,
+      title: "Supprimer l'entrée",
+      message: "Voulez-vous vraiment supprimer ce marché de votre historique ?",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'markets', id));
+          showNotification("Entrée supprimée.", 'success');
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, `markets/${id}`);
+        }
+        setConfirmModal(prev => ({ ...prev, show: false }));
       }
-    }
+    });
   };
 
   // Stats Calculations
@@ -1239,7 +1282,7 @@ function App() {
                   </button>
 
                   <button 
-                    onClick={() => alert("Pour supprimer votre compte et toutes vos données, veuillez contacter le support à support@marchemanager.fr")}
+                    onClick={() => showNotification("Pour supprimer votre compte, contactez support@marchemanager.fr", 'info')}
                     className="w-full bg-[#141414] p-5 rounded-3xl border border-white/5 flex items-center gap-4 hover:bg-red-500/5 hover:border-red-500/20 transition-colors text-red-600 opacity-50"
                   >
                     <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center">
@@ -1595,6 +1638,68 @@ function App() {
           </button>
         </div>
       </nav>
+
+      {/* Confirm Modal */}
+      <AnimatePresence>
+        {confirmModal.show && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md p-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="w-full max-w-sm bg-[#141414] border border-white/10 rounded-[40px] p-8 space-y-6 text-center"
+            >
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-white">{confirmModal.title}</h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{confirmModal.message}</p>
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setConfirmModal(prev => ({ ...prev, show: false }))}
+                  className="flex-1 py-4 rounded-2xl bg-white/5 text-gray-400 font-bold text-sm hover:bg-white/10 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={confirmModal.onConfirm}
+                  className="flex-1 py-4 rounded-2xl bg-orange-500 text-white font-bold text-sm hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notification Toast */}
+      <AnimatePresence>
+        {notification.show && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-24 left-4 right-4 z-[200] flex justify-center pointer-events-none"
+          >
+            <div className={cn(
+              "px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md border",
+              notification.type === 'success' ? "bg-green-500/10 border-green-500/20 text-green-500" :
+              notification.type === 'error' ? "bg-red-500/10 border-red-500/20 text-red-500" :
+              "bg-blue-500/10 border-blue-500/20 text-blue-500"
+            )}>
+              {notification.type === 'success' && <Check size={18} />}
+              {notification.type === 'error' && <X size={18} />}
+              {notification.type === 'info' && <Info size={18} />}
+              <span className="text-sm font-bold">{notification.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
