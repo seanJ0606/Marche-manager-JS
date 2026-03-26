@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- CONFIGURATION PLEIN ÉCRAN & ICÔNE -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Marché Pro">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- ICÔNE PWA -->
+    <!-- ICÔNE PERSONNALISÉE -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48dGV4dCB4PSIyNjUiIHk9IjMyNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuNSI+TTwvdGV4dD48dGV4dCB4PSIyNTUiIHk9IjMxNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk08L3RleHQ+PC9zdmc+">
 
     <title>Marché Manager Pro</title>
@@ -20,18 +22,16 @@
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #f97316; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #debug-console { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: rgba(255,0,0,0.9); color: white; font-size: 12px; z-index: 9999; display: none; word-break: break-all; }
+        #debug-console { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #ff4444; color: white; font-size: 13px; z-index: 9999; display: none; text-align: center; font-weight: bold; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
 <body>
     <div id="debug-console"></div>
     <div id="root">
-        <div id="loading-screen" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
             <div class="loader"></div>
-            <p style="color: #666; font-size: 14px;">Initialisation sécurisée...</p>
-            <p id="timeout-msg" style="color: #444; font-size: 11px; display: none; text-align: center; padding: 0 40px;">
-                Si cela prend trop de temps, vérifiez que vous avez bien ajouté votre domaine GitHub dans la console Firebase (Authentication > Settings).
-            </p>
+            <p style="color: #666; font-size: 14px;">Connexion à Marché Manager...</p>
         </div>
     </div>
 
@@ -42,8 +42,9 @@
         import { initializeApp } from 'https://esm.sh/firebase@10.4.0/app';
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://esm.sh/firebase@10.4.0/auth';
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from 'https://esm.sh/firebase@10.4.0/firestore';
+        import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isWithinInterval } from 'https://esm.sh/date-fns@2.30.0';
+        import { fr } from 'https://esm.sh/date-fns@2.30.0/locale';
 
-        // --- CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyAXmSV5CPO7yh8YiY5Nd4SyLdiFFeNU2ns",
             authDomain: "manager-marche-sj.firebaseapp.com",
@@ -54,13 +55,11 @@
             measurementId: "G-L1XXS2SKDE"
         };
 
-        // --- DIAGNOSTIC ---
         const showError = (msg) => {
             const console = document.getElementById('debug-console');
             console.style.display = 'block';
-            console.innerHTML = "<strong>ERREUR DÉTECTÉE :</strong><br/>" + msg;
+            console.innerHTML = "⚠️ " + msg;
         };
-        setTimeout(() => { document.getElementById('timeout-msg').style.display = 'block'; }, 5000);
 
         let db, auth, provider;
         try {
@@ -68,23 +67,25 @@
             db = getFirestore(app);
             auth = getAuth(app);
             provider = new GoogleAuthProvider();
-        } catch (e) { showError("Initialisation Firebase : " + e.message); }
+        } catch (e) { showError("Erreur : " + e.message); }
 
         function App() {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
             const [entries, setEntries] = useState([]);
             const [activeTab, setActiveTab] = useState('dashboard');
-            const [formData, setFormData] = useState({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0 });
+            const [editingId, setEditingId] = useState(null);
+            const [formData, setFormData] = useState({
+                marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0,
+                startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3
+            });
 
             useEffect(() => {
                 if (!auth) return;
-                try {
-                    return onAuthStateChanged(auth, (u) => {
-                        setUser(u);
-                        setLoading(false);
-                    }, (err) => showError("Auth State : " + err.message));
-                } catch (e) { showError("Setup Auth : " + e.message); }
+                return onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                    setLoading(false);
+                }, (err) => showError("Erreur Auth : " + err.message));
             }, []);
 
             useEffect(() => {
@@ -93,9 +94,29 @@
                     const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
                     return onSnapshot(q, (snapshot) => {
                         setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-                    }, (err) => showError("Firestore (Vérifiez si la base de données est créée) : " + err.message));
-                } catch (e) { showError("Setup Firestore : " + e.message); }
+                    }, (err) => {
+                        if (err.message.includes('firestore')) {
+                            showError("Firestore n'est pas activé. Allez dans votre console Firebase > Firestore Database > Créer une base de données.");
+                        } else {
+                            showError("Erreur Firestore : " + err.message);
+                        }
+                    });
+                } catch (e) { showError("Erreur Snapshot : " + e.message); }
             }, [user]);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    if (editingId) {
+                        await updateDoc(doc(db, 'markets', editingId), { ...formData, uid: user.uid });
+                    } else {
+                        await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
+                    }
+                    setFormData({ marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0, startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3 });
+                    setEditingId(null);
+                    setActiveTab('dashboard');
+                } catch (err) { alert("Erreur : " + err.message); }
+            };
 
             if (loading) return React.createElement('div', { className: "h-screen flex items-center justify-center" }, React.createElement('div', { className: "loader" }));
 
@@ -103,7 +124,7 @@
                 React.createElement('h1', { className: "text-4xl font-black text-orange-500 mb-2" }, "MARCHÉ MANAGER"),
                 React.createElement('p', { className: "text-gray-500 mb-8" }, "Connectez-vous pour commencer"),
                 React.createElement('button', { 
-                    onClick: () => signInWithPopup(auth, provider).catch(e => showError("Popup bloquée ou domaine non autorisé : " + e.message)),
+                    onClick: () => signInWithPopup(auth, provider).catch(e => showError("Domaine non autorisé. Ajoutez 'seanj0606.github.io' dans Firebase > Authentication > Settings > Authorized domains.")),
                     className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl"
                 }, "Se connecter avec Google")
             );
@@ -130,27 +151,19 @@
                     ),
                     React.createElement('div', { className: "space-y-4" },
                         React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase" }, "Dernières Activités"),
-                        entries.length > 0 ? entries.slice(0, 5).map(e => React.createElement('div', { key: e.id, className: "glass p-4 rounded-2xl flex justify-between items-center" },
+                        entries.slice(0, 5).map(e => React.createElement('div', { key: e.id, className: "glass p-4 rounded-2xl flex justify-between items-center" },
                             React.createElement('div', null,
                                 React.createElement('p', { className: "font-bold" }, e.marketName),
                                 React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date)
                             ),
                             React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains).toFixed(0), "€")
-                        )) : React.createElement('p', { className: "text-center text-gray-600 py-10" }, "Aucun marché enregistré")
+                        ))
                     )
                 ),
 
                 activeTab === 'form' && React.createElement('div', { className: "space-y-6" },
-                    React.createElement('h2', { className: "text-2xl font-black" }, "NOUVEAU MARCHÉ"),
-                    React.createElement('form', { 
-                        onSubmit: async (e) => {
-                            e.preventDefault();
-                            await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
-                            setFormData({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0 });
-                            setActiveTab('dashboard');
-                        }, 
-                        className: "space-y-4" 
-                    },
+                    React.createElement('h2', { className: "text-2xl font-black" }, editingId ? "MODIFIER" : "NOUVEAU MARCHÉ"),
+                    React.createElement('form', { onSubmit: handleSubmit, className: "space-y-4" },
                         React.createElement('input', { type: "text", required: true, placeholder: "Nom du Marché", value: formData.marketName, onChange: e => setFormData({...formData, marketName: e.target.value}), className: "w-full glass p-4 rounded-2xl outline-none focus:border-orange-500" }),
                         React.createElement('input', { type: "date", value: formData.date, onChange: e => setFormData({...formData, date: e.target.value}), className: "w-full glass p-4 rounded-2xl outline-none" }),
                         React.createElement('div', { className: "grid grid-cols-2 gap-4" },
@@ -158,7 +171,7 @@
                             React.createElement('input', { type: "number", placeholder: "CB (€)", value: formData.cardGains || '', onChange: e => setFormData({...formData, cardGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" })
                         ),
                         React.createElement('input', { type: "number", placeholder: "Frais (€)", value: formData.expenses || '', onChange: e => setFormData({...formData, expenses: Number(e.target.value)}), className: "w-full glass p-4 rounded-2xl outline-none" }),
-                        React.createElement('button', { type: "submit", className: "w-full bg-orange-500 p-5 rounded-2xl font-bold shadow-lg" }, "ENREGISTRER")
+                        React.createElement('button', { type: "submit", className: "w-full bg-orange-500 p-5 rounded-2xl font-bold shadow-lg" }, editingId ? "METTRE À JOUR" : "ENREGISTRER")
                     )
                 ),
 
@@ -169,7 +182,7 @@
                         { id: 'history', icon: Lucide.History }
                     ].map(item => React.createElement('button', { 
                         key: item.id, 
-                        onClick: () => setActiveTab(item.id),
+                        onClick: () => { setActiveTab(item.id); setEditingId(null); },
                         className: `flex flex-col items-center p-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-orange-500 text-white' : 'text-gray-500'}`
                     }, React.createElement(item.icon, { size: 24 })))
                 )
