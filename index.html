@@ -4,26 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- CONFIGURATION PLEIN ÉCRAN & ICÔNE -->
+    <!-- CONFIGURATION PLEIN ÉCRAN (PWA) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Marché Pro">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- ICÔNE PERSONNALISÉE -->
+    <!-- ICÔNE PERSONNALISÉE (Carré orange, M blanc et noir superposés) -->
     <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48dGV4dCB4PSIyNjUiIHk9IjMyNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuNSI+TTwvdGV4dD48dGV4dCB4PSIyNTUiIHk9IjMxNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk08L3RleHQ+PC9zdmc+">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMjAiIGZpbGw9IiNmOTczMTYiLz48dGV4dCB4PSIyNjUiIHk9IjMyNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0iYmxhY2siIHRleHQtYW5jaG9yPSJtaWRkbGUiIG9wYWNpdHk9IjAuNSI+TTwvdGV4dD48dGV4dCB4PSIyNTUiIHk9IjMxNSIgZm9udC1mYW1pbHk9IkludGVyLCBzYW5zLXNlcmlmIiBmb250LXdlaWdodD0iOTAwIiBmb250LXNpemU9IjI4MCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPk08L3RleHQ+PC9zdmc+">
 
     <title>Marché Manager Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; margin: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); overflow-x: hidden; font-family: 'Inter', sans-serif; }
+        body { background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; margin: 0; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0; overflow-x: hidden; font-family: 'Inter', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .loader { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #f97316; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #debug-console { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #ff4444; color: white; font-size: 13px; z-index: 9999; display: none; text-align: center; font-weight: bold; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        #debug-console { position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #ff4444; color: white; font-size: 13px; z-index: 9999; display: none; text-align: center; font-weight: bold; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -31,7 +33,7 @@
     <div id="root">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
             <div class="loader"></div>
-            <p style="color: #666; font-size: 14px;">Connexion à Marché Manager...</p>
+            <p style="color: #666; font-size: 14px;">Initialisation de l'application...</p>
         </div>
     </div>
 
@@ -42,7 +44,7 @@
         import { initializeApp } from 'https://esm.sh/firebase@10.4.0/app';
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://esm.sh/firebase@10.4.0/auth';
         import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from 'https://esm.sh/firebase@10.4.0/firestore';
-        import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isWithinInterval } from 'https://esm.sh/date-fns@2.30.0';
+        import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'https://esm.sh/date-fns@2.30.0';
         import { fr } from 'https://esm.sh/date-fns@2.30.0/locale';
 
         const firebaseConfig = {
@@ -67,7 +69,7 @@
             db = getFirestore(app);
             auth = getAuth(app);
             provider = new GoogleAuthProvider();
-        } catch (e) { showError("Erreur : " + e.message); }
+        } catch (e) { showError("Erreur Config : " + e.message); }
 
         function App() {
             const [user, setUser] = useState(null);
@@ -75,9 +77,10 @@
             const [entries, setEntries] = useState([]);
             const [activeTab, setActiveTab] = useState('dashboard');
             const [editingId, setEditingId] = useState(null);
+            const [selectedEntry, setSelectedEntry] = useState(null);
             const [formData, setFormData] = useState({
                 marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0,
-                startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3
+                cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3
             });
 
             useEffect(() => {
@@ -90,18 +93,16 @@
 
             useEffect(() => {
                 if (!user || !db) return;
-                try {
-                    const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
-                    return onSnapshot(q, (snapshot) => {
-                        setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-                    }, (err) => {
-                        if (err.message.includes('firestore')) {
-                            showError("Firestore n'est pas activé. Allez dans votre console Firebase > Firestore Database > Créer une base de données.");
-                        } else {
-                            showError("Erreur Firestore : " + err.message);
-                        }
-                    });
-                } catch (e) { showError("Erreur Snapshot : " + e.message); }
+                const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
+                return onSnapshot(q, (snapshot) => {
+                    setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+                }, (err) => {
+                    if (err.message.includes('permission-denied') || err.message.includes('not available')) {
+                        showError("Firestore n'est pas activé ou les règles sont bloquées. Allez dans Firebase > Firestore Database.");
+                    } else {
+                        showError("Erreur Firestore : " + err.message);
+                    }
+                });
             }, [user]);
 
             const handleSubmit = async (e) => {
@@ -112,10 +113,24 @@
                     } else {
                         await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
                     }
-                    setFormData({ marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0, startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3 });
+                    setFormData({ marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0, cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 3 });
                     setEditingId(null);
                     setActiveTab('dashboard');
                 } catch (err) { alert("Erreur : " + err.message); }
+            };
+
+            const handleEdit = (entry) => {
+                setFormData({ ...entry });
+                setEditingId(entry.id);
+                setSelectedEntry(null);
+                setActiveTab('form');
+            };
+
+            const handleDelete = async (id) => {
+                if (confirm("Supprimer définitivement ce marché ?")) {
+                    await deleteDoc(doc(db, 'markets', id));
+                    setSelectedEntry(null);
+                }
             };
 
             if (loading) return React.createElement('div', { className: "h-screen flex items-center justify-center" }, React.createElement('div', { className: "loader" }));
@@ -124,12 +139,12 @@
                 React.createElement('h1', { className: "text-4xl font-black text-orange-500 mb-2" }, "MARCHÉ MANAGER"),
                 React.createElement('p', { className: "text-gray-500 mb-8" }, "Connectez-vous pour commencer"),
                 React.createElement('button', { 
-                    onClick: () => signInWithPopup(auth, provider).catch(e => showError("Domaine non autorisé. Ajoutez 'seanj0606.github.io' dans Firebase > Authentication > Settings > Authorized domains.")),
+                    onClick: () => signInWithPopup(auth, provider).catch(e => showError("Domaine non autorisé. Ajoutez 'seanj0606.github.io' dans Firebase > Auth > Settings.")),
                     className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl"
                 }, "Se connecter avec Google")
             );
 
-            return React.createElement('div', { className: "max-w-md mx-auto p-4 pb-24" },
+            return React.createElement('div', { className: "max-w-md mx-auto p-4 pb-32" },
                 React.createElement('header', { className: "flex justify-between items-center mb-8" },
                     React.createElement('div', null,
                         React.createElement('h1', { className: "text-xl font-black text-orange-500" }, "MARCHÉ MANAGER"),
@@ -141,8 +156,8 @@
                 activeTab === 'dashboard' && React.createElement('div', { className: "space-y-6" },
                     React.createElement('div', { className: "grid grid-cols-2 gap-4" },
                         React.createElement('div', { className: "glass p-5 rounded-3xl" },
-                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "TOTAL GAINS"),
-                            React.createElement('p', { className: "text-2xl font-black text-orange-500" }, entries.reduce((acc, e) => acc + (e.cashGains || 0) + (e.cardGains || 0), 0).toFixed(0), "€")
+                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "BÉNÉFICE NET"),
+                            React.createElement('p', { className: "text-2xl font-black text-orange-500" }, entries.reduce((acc, e) => acc + (e.cashGains + e.cardGains - e.expenses - (e.kmTravelled * 0.2)), 0).toFixed(0), "€")
                         ),
                         React.createElement('div', { className: "glass p-5 rounded-3xl" },
                             React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "MARCHÉS"),
@@ -150,13 +165,16 @@
                         )
                     ),
                     React.createElement('div', { className: "space-y-4" },
-                        React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase" }, "Dernières Activités"),
-                        entries.slice(0, 5).map(e => React.createElement('div', { key: e.id, className: "glass p-4 rounded-2xl flex justify-between items-center" },
+                        React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase" }, "Derniers Marchés"),
+                        entries.slice(0, 5).map(e => React.createElement('div', { key: e.id, onClick: () => setSelectedEntry(e), className: "glass p-4 rounded-2xl flex justify-between items-center cursor-pointer" },
                             React.createElement('div', null,
                                 React.createElement('p', { className: "font-bold" }, e.marketName),
-                                React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date)
+                                React.createElement('p', { className: "text-[10px] text-gray-500" }, format(parseISO(e.date), 'dd MMM yyyy'))
                             ),
-                            React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains).toFixed(0), "€")
+                            React.createElement('div', { className: "flex items-center gap-3" },
+                                React.createElement('button', { onClick: (ev) => { ev.stopPropagation(); handleEdit(e); }, className: "p-2 bg-white/5 rounded-lg text-gray-500" }, React.createElement(Lucide.Edit, { size: 16 })),
+                                React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains - e.expenses - (e.kmTravelled * 0.2)).toFixed(0), "€")
+                            )
                         ))
                     )
                 ),
@@ -170,9 +188,23 @@
                             React.createElement('input', { type: "number", placeholder: "Espèces (€)", value: formData.cashGains || '', onChange: e => setFormData({...formData, cashGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" }),
                             React.createElement('input', { type: "number", placeholder: "CB (€)", value: formData.cardGains || '', onChange: e => setFormData({...formData, cardGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" })
                         ),
-                        React.createElement('input', { type: "number", placeholder: "Frais (€)", value: formData.expenses || '', onChange: e => setFormData({...formData, expenses: Number(e.target.value)}), className: "w-full glass p-4 rounded-2xl outline-none" }),
+                        React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                            React.createElement('input', { type: "number", placeholder: "Frais (€)", value: formData.expenses || '', onChange: e => setFormData({...formData, expenses: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" }),
+                            React.createElement('input', { type: "number", placeholder: "KM", value: formData.kmTravelled || '', onChange: e => setFormData({...formData, kmTravelled: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" })
+                        ),
                         React.createElement('button', { type: "submit", className: "w-full bg-orange-500 p-5 rounded-2xl font-bold shadow-lg" }, editingId ? "METTRE À JOUR" : "ENREGISTRER")
                     )
+                ),
+
+                activeTab === 'history' && React.createElement('div', { className: "space-y-4" },
+                    React.createElement('h2', { className: "text-2xl font-black" }, "HISTORIQUE"),
+                    entries.map(e => React.createElement('div', { key: e.id, onClick: () => setSelectedEntry(e), className: "glass p-4 rounded-2xl flex justify-between items-center cursor-pointer" },
+                        React.createElement('div', null,
+                            React.createElement('p', { className: "font-bold" }, e.marketName),
+                            React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date)
+                        ),
+                        React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains - e.expenses).toFixed(0), "€")
+                    ))
                 ),
 
                 React.createElement('nav', { className: "fixed bottom-6 left-4 right-4 glass rounded-3xl p-2 flex justify-around items-center z-50 shadow-2xl" },
@@ -185,6 +217,23 @@
                         onClick: () => { setActiveTab(item.id); setEditingId(null); },
                         className: `flex flex-col items-center p-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-orange-500 text-white' : 'text-gray-500'}`
                     }, React.createElement(item.icon, { size: 24 })))
+                ),
+
+                selectedEntry && React.createElement('div', { className: "fixed inset-0 bg-black/90 backdrop-blur-md z-[100] p-6 flex items-end" },
+                    React.createElement('div', { className: "w-full glass rounded-[40px] p-8 space-y-6" },
+                        React.createElement('div', { className: "flex justify-between" },
+                            React.createElement('h2', { className: "text-3xl font-black" }, selectedEntry.marketName),
+                            React.createElement('button', { onClick: () => setSelectedEntry(null) }, React.createElement(Lucide.X, { size: 24 }))
+                        ),
+                        React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                            React.createElement('div', { className: "bg-white/5 p-4 rounded-2xl" }, React.createElement('p', { className: "text-[10px] text-gray-500 font-bold" }, "NET"), React.createElement('p', { className: "text-xl font-black text-orange-500" }, (selectedEntry.cashGains + selectedEntry.cardGains - selectedEntry.expenses - (selectedEntry.kmTravelled * 0.2)).toFixed(2), "€")),
+                            React.createElement('div', { className: "bg-white/5 p-4 rounded-2xl" }, React.createElement('p', { className: "text-[10px] text-gray-500 font-bold" }, "KM"), React.createElement('p', { className: "text-xl font-black" }, selectedEntry.kmTravelled))
+                        ),
+                        React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                            React.createElement('button', { onClick: () => handleEdit(selectedEntry), className: "w-full py-4 rounded-2xl border border-orange-500/20 text-orange-500 font-bold" }, "MODIFIER"),
+                            React.createElement('button', { onClick: () => handleDelete(selectedEntry.id), className: "w-full py-4 rounded-2xl border border-red-500/20 text-red-500 font-bold" }, "SUPPRIMER")
+                        )
+                    )
                 )
             );
         }
