@@ -1,394 +1,223 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Marché Manager Pro</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script>
-tailwind.config = {
-theme: {
-extend: {
-fontFamily: {
-sans: ['Inter', 'sans-serif'],
-mono: ['JetBrains Mono', 'monospace'],
-},
-colors: {
-orange: {
-50: '#fff7ed',
-100: '#ffedd5',
-200: '#fed7aa',
-300: '#fdba74',
-400: '#fb923c',
-500: '#f97316',
-600: '#ea580c',
-700: '#c2410c',
-800: '#9a3412',
-900: '#7c2d12',
-}
-}
-}
-}
-}
-</script>
-<style>
-body { background-color: #050505; color: white; -webkit-tap-highlight-color: transparent; }
-.glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marché Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #050505; 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            overflow-x: hidden; 
+        }
+        .glass { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+        }
+        #root { min-height: 100vh; }
+        .loader { 
+            border: 3px solid rgba(255,255,255,0.1); 
+            border-top: 3px solid #f97316; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+    </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="module">
-    import React, { useState, useEffect, useMemo, useCallback, useRef } from 'https://esm.sh/react@18.2.0';
-    import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
-    import { 
-        LayoutDashboard, PlusCircle, History, LogOut, TrendingUp, MapPin, Cloud, Sun, CloudRain, 
-        CloudLightning, Wind, Euro, Clock, Star, Trash2, ChevronRight, Search, Map as MapIcon, 
-        Settings, FileDown, RefreshCcw, Check, Camera, X, Filter, Info, Edit, ChevronLeft, Calendar
-    } from 'https://esm.sh/lucide-react@0.284.0';
-    import { motion, AnimatePresence } from 'https://esm.sh/framer-motion@10.16.4';
-    import { 
-        BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell 
-    } from 'https://esm.sh/recharts@2.8.0';
-    import { format, parseISO, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, subDays, startOfMonth, endOfMonth, isWithinInterval } from 'https://esm.sh/date-fns@2.30.0';
-    import { fr } from 'https://esm.sh/date-fns@2.30.0/locale';
-    import { initializeApp } from 'https://esm.sh/firebase@10.4.0/app';
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://esm.sh/firebase@10.4.0/auth';
-    import { 
-        getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, setDoc, updateDoc, getDocs, getDocFromServer
-    } from 'https://esm.sh/firebase@10.4.0/firestore';
-    import { GoogleGenAI } from 'https://esm.sh/@google/genai@0.1.0';
-    import { jsPDF } from 'https://esm.sh/jspdf@2.5.1';
-    import autoTable from 'https://esm.sh/jspdf-autotable@3.6.0';
+    <div id="root">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
+            <div class="loader"></div>
+            <p style="color: #666; font-size: 14px;">Chargement de Marché Manager...</p>
+            <noscript><p style="color: red;">Veuillez activer JavaScript pour utiliser cette application.</p></noscript>
+        </div>
+    </div>
 
-    // --- Configuration (À remplir par l'utilisateur) ---
-    const firebaseConfig = {
-        apiKey: "VOTRE_API_KEY",
-        authDomain: "VOTRE_AUTH_DOMAIN",
-        projectId: "VOTRE_PROJECT_ID",
-        storageBucket: "VOTRE_STORAGE_BUCKET",
-        messagingSenderId: "VOTRE_SENDER_ID",
-        appId: "VOTRE_APP_ID"
-    };
+    <!-- Chargement des bibliothèques via ESM -->
+    <script type="module">
+        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
+        import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
+        import * as Lucide from 'https://esm.sh/lucide-react@0.284.0';
+        import { initializeApp } from 'https://esm.sh/firebase@10.4.0/app';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://esm.sh/firebase@10.4.0/auth';
+        import { getFirestore, collection, query, where, onSnapshot, orderBy } from 'https://esm.sh/firebase@10.4.0/firestore';
 
-    const GEMINI_API_KEY = "VOTRE_GEMINI_API_KEY";
+        // === CONFIGURATION FIREBASE (récupérée depuis la console) ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyAXmSV5CP07yh8YiY5Nd4SyLdiFFeNU2ns",
+            authDomain: "manager-marche-sj.firebaseapp.com",
+            projectId: "manager-marche-sj",
+            storageBucket: "manager-marche-sj.firebasestorage.app",
+            messagingSenderId: "28175692353",
+            appId: "1:28175692353:web:b1a704af8b0bb5ace34cc0",
+            measurementId: "G-L1XXS2SKDE"
+        };
 
-    // --- Firebase Init ---
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+        // --- INITIALISATION ---
+        let db, auth, provider;
 
-    // --- Types & Helpers ---
-    const OperationType = { CREATE: 'create', UPDATE: 'update', DELETE: 'delete', LIST: 'list', GET: 'get', WRITE: 'write' };
-    const handleFirestoreError = (error, type, path) => {
-        console.error(`Firestore Error [${type}] at ${path}:`, error);
-        alert(`Erreur de base de données: ${error.message}`);
-    };
-
-    const cn = (...classes) => classes.filter(Boolean).join(' ');
-
-    // --- Components ---
-    const WeatherIcon = ({ type, className }) => {
-        switch (type) {
-            case 'Soleil': return React.createElement(Sun, { className, size: 24 });
-            case 'Nuageux': return React.createElement(Cloud, { className, size: 24 });
-            case 'Pluie': return React.createElement(CloudRain, { className, size: 24 });
-            case 'Orage': return React.createElement(CloudLightning, { className, size: 24 });
-            case 'Vent': return React.createElement(Wind, { className, size: 24 });
-            default: return React.createElement(Sun, { className, size: 24 });
+        try {
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            provider = new GoogleAuthProvider();
+        } catch (e) {
+            console.error("Erreur Firebase :", e);
+            document.getElementById('root').innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #ff4444;">
+                    <h2 style="margin-bottom: 20px;">Erreur de Configuration</h2>
+                    <p>L'application n'a pas pu démarrer.</p>
+                    <p style="font-size: 13px; margin-top: 15px;">Vérifiez la console pour plus de détails.</p>
+                </div>
+            `;
         }
-    };
 
-    const SatisfactionStars = ({ rating }) => (
-        React.createElement('div', { className: "flex gap-0.5" },
-            [...Array(5)].map((_, i) => 
-                React.createElement(Star, { 
-                    key: i, 
-                    size: 10, 
-                    className: cn(i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-800") 
-                })
-            )
-        )
-    );
+        function App() {
+            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [entries, setEntries] = useState([]);
+            const [activeTab, setActiveTab] = useState('dashboard');
 
-    // --- Main App ---
-    function App() {
-        const [user, setUser] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [entries, setEntries] = useState([]);
-        const [activeTab, setActiveTab] = useState('dashboard');
-        const [statsPeriod, setStatsPeriod] = useState('month');
-        const [selectedWeekDay, setSelectedWeekDay] = useState(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1);
-        const [merchandiseExpenses, setMerchandiseExpenses] = useState(0);
-        const [stockPercentage, setStockPercentage] = useState(100);
-        const [isEditingExpenses, setIsEditingExpenses] = useState(false);
-        const [showSuccess, setShowSuccess] = useState(false);
-        const [selectedEntry, setSelectedEntry] = useState(null);
-        const [tagFilter, setTagFilter] = useState(null);
-        const [editingId, setEditingId] = useState(null);
-        const [formData, setFormData] = useState({
-            marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0,
-            startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0,
-            satisfaction: 3, tags: [], photoUrl: ''
-        });
-        const [newTag, setNewTag] = useState('');
-        const [aiLoading, setAiLoading] = useState(false);
-        const [aiInfo, setAiInfo] = useState(null);
-
-        useEffect(() => {
-            const unsubscribe = onAuthStateChanged(auth, (u) => {
-                setUser(u);
-                setLoading(false);
-            });
-            return unsubscribe;
-        }, []);
-
-        useEffect(() => {
-            if (!user) return;
-            const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
-            const unsubscribe = onSnapshot(q, (snapshot) => {
-                setEntries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }, (error) => handleFirestoreError(error, OperationType.LIST, 'markets'));
-
-            const settingsRef = doc(db, 'settings', user.uid);
-            const unsubSettings = onSnapshot(settingsRef, (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    setMerchandiseExpenses(data.merchandiseExpenses || 0);
-                    setStockPercentage(data.stockPercentage !== undefined ? data.stockPercentage : 100);
-                }
-            });
-            return () => { unsubscribe(); unsubSettings(); };
-        }, [user]);
-
-        const stats = useMemo(() => {
-            const now = new Date();
-            let filtered = entries;
-            if (statsPeriod === 'month') {
-                filtered = entries.filter(e => {
-                    const d = parseISO(e.date);
-                    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            useEffect(() => {
+                if (!auth) return;
+                const unsubscribe = onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                    setLoading(false);
                 });
-            } else if (statsPeriod === 'week') {
-                const start = startOfWeek(now, { weekStartsOn: 1 });
-                const end = endOfWeek(now, { weekStartsOn: 1 });
-                filtered = entries.filter(e => isWithinInterval(parseISO(e.date), { start, end }));
+                return unsubscribe;
+            }, []);
+
+            useEffect(() => {
+                if (!user || !db) return;
+                const q = query(
+                    collection(db, 'markets'), 
+                    where('uid', '==', user.uid), 
+                    orderBy('date', 'desc')
+                );
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+                });
+                return unsubscribe;
+            }, [user]);
+
+            if (loading) {
+                return React.createElement('div', { 
+                    className: "h-screen flex items-center justify-center" 
+                }, React.createElement('div', { className: "loader" }));
             }
 
-            const totalGains = filtered.reduce((acc, curr) => acc + curr.cashGains + curr.cardGains, 0);
-            const totalExpenses = filtered.reduce((acc, curr) => acc + curr.expenses, 0);
-            const totalKm = filtered.reduce((acc, curr) => acc + curr.kmTravelled, 0);
-            const fuelCost = totalKm * 0.20;
-            const netProfit = totalGains - totalExpenses - fuelCost;
-
-            const chartData = filtered.slice(0, 7).reverse().map(e => ({
-                name: format(parseISO(e.date), 'dd/MM'),
-                gains: e.cashGains + e.cardGains
-            }));
-
-            return { totalGains, totalExpenses, totalKm, fuelCost, netProfit, chartData };
-        }, [entries, statsPeriod]);
-
-        const weekEntriesByDay = useMemo(() => {
-            const start = startOfWeek(new Date(), { weekStartsOn: 1 });
-            const days = eachDayOfInterval({ start, end: endOfWeek(new Date(), { weekStartsOn: 1 }) });
-            return days.map(day => entries.filter(e => isSameDay(parseISO(e.date), day)));
-        }, [entries]);
-
-        const handleLogin = () => signInWithPopup(auth, provider);
-        const handleLogout = () => signOut(auth);
-
-        const handleSubmit = async (e) => {
-            e.preventDefault();
-            if (!user) return;
-            try {
-                if (editingId) {
-                    await updateDoc(doc(db, 'markets', editingId), { ...formData, uid: user.uid, updatedAt: new Date().toISOString() });
-                } else {
-                    await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
-                }
-                setShowSuccess(true);
-                setTimeout(() => {
-                    setShowSuccess(false);
-                    setFormData({ marketName: '', date: format(new Date(), 'yyyy-MM-dd'), weather: 'Soleil', kmTravelled: 0, startTime: '08:00', endTime: '13:00', cashGains: 0, cardGains: 0, expenses: 0, satisfaction: 5, tags: [], photoUrl: '' });
-                    setEditingId(null);
-                    setActiveTab('dashboard');
-                }, 1500);
-            } catch (error) { handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, editingId ? `markets/${editingId}` : 'markets'); }
-        };
-
-        const handleEdit = (entry) => {
-            setFormData({ ...entry, tags: entry.tags || [], photoUrl: entry.photoUrl || '' });
-            setEditingId(entry.id);
-            setSelectedEntry(null);
-            setActiveTab('form');
-        };
-
-        const handleDelete = async (id) => {
-            if (window.confirm("Supprimer cette entrée ?")) {
-                try { await deleteDoc(doc(db, 'markets', id)); }
-                catch (error) { handleFirestoreError(error, OperationType.DELETE, `markets/${id}`); }
+            if (!user) {
+                return React.createElement('div', { 
+                    className: "h-screen flex flex-col items-center justify-center p-6 text-center" 
+                },
+                    React.createElement('h1', { 
+                        className: "text-4xl font-black text-orange-500 mb-2" 
+                    }, "MARCHÉ MANAGER"),
+                    React.createElement('p', { 
+                        className: "text-gray-500 mb-8" 
+                    }, "Connectez-vous pour gérer vos marchés"),
+                    React.createElement('button', { 
+                        onClick: () => signInWithPopup(auth, provider),
+                        className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:bg-gray-100 transition"
+                    }, 
+                        React.createElement('span', null, "Se connecter avec Google")
+                    )
+                );
             }
-        };
 
-        if (loading) return React.createElement('div', { className: "h-screen flex items-center justify-center" }, React.createElement('div', { className: "animate-spin rounded-full h-12 w-12 border-t-2 border-orange-500" }));
-
-        if (!user) return (
-            React.createElement('div', { className: "h-screen flex flex-col items-center justify-center p-6 text-center space-y-8" },
-                React.createElement('div', { className: "space-y-2" },
-                    React.createElement('h1', { className: "text-5xl font-black tracking-tighter text-orange-500" }, "MARCHÉ MANAGER"),
-                    React.createElement('p', { className: "text-gray-500 font-medium" }, "Gérez votre rentabilité sur les marchés")
-                ),
-                React.createElement('button', { onClick: handleLogin, className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 hover:scale-105 transition-transform" },
-                    React.createElement('img', { src: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg", className: "w-6 h-6" }),
-                    "Se connecter avec Google"
-                )
-            )
-        );
-
-        return (
-            React.createElement('div', { className: "max-w-md mx-auto min-h-screen pb-24 pt-6 px-4" },
-                // --- Header ---
+            return React.createElement('div', { className: "max-w-md mx-auto p-4 pb-24" },
+                // Header
                 React.createElement('header', { className: "flex justify-between items-center mb-8" },
                     React.createElement('div', null,
-                        React.createElement('h1', { className: "text-xl font-black text-orange-500" }, "MARCHÉ MANAGER"),
-                        React.createElement('p', { className: "text-[10px] text-gray-500 font-bold uppercase tracking-widest" }, "Tableau de Bord")
+                        React.createElement('h1', { 
+                            className: "text-xl font-black text-orange-500" 
+                        }, "MARCHÉ MANAGER"),
+                        React.createElement('p', { 
+                            className: "text-[10px] text-gray-500 font-bold uppercase" 
+                        }, user.displayName || user.email)
                     ),
-                    React.createElement('button', { onClick: handleLogout, className: "p-2 bg-white/5 rounded-xl text-gray-500" }, React.createElement(LogOut, { size: 20 }))
+                    React.createElement('button', { 
+                        onClick: () => signOut(auth), 
+                        className: "p-2 bg-white/5 rounded-xl hover:bg-white/10 transition" 
+                    }, 
+                        React.createElement(Lucide.LogOut, { size: 20 })
+                    )
                 ),
 
-                // --- Content ---
-                React.createElement(AnimatePresence, { mode: 'wait' },
-                    activeTab === 'dashboard' && React.createElement(motion.div, { key: "dash", initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, className: "space-y-6" },
-                        // Stats Cards
-                        React.createElement('div', { className: "grid grid-cols-2 gap-4" },
-                            React.createElement('div', { className: "glass p-5 rounded-3xl" },
-                                React.createElement('p', { className: "text-[10px] text-gray-500 uppercase font-bold mb-1" }, "Bénéfice Net"),
-                                React.createElement('p', { className: "text-2xl font-black text-orange-500" }, stats.netProfit.toFixed(0), "€")
-                            ),
-                            React.createElement('div', { className: "glass p-5 rounded-3xl" },
-                                React.createElement('p', { className: "text-[10px] text-gray-500 uppercase font-bold mb-1" }, "Distance"),
-                                React.createElement('p', { className: "text-2xl font-black" }, stats.totalKm, " km")
+                // Dashboard
+                activeTab === 'dashboard' && React.createElement('div', { className: "space-y-6" },
+                    React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                        React.createElement('div', { className: "glass p-5 rounded-3xl" },
+                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "TOTAL GAINS"),
+                            React.createElement('p', { 
+                                className: "text-2xl font-black text-orange-500" 
+                            }, 
+                                entries.reduce((acc, e) => acc + (e.cashGains || 0) + (e.cardGains || 0), 0) + " €"
                             )
                         ),
-                        // Recent Activity
-                        React.createElement('div', { className: "space-y-4" },
-                            React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase tracking-widest" }, "Derniers Marchés"),
-                            entries.slice(0, 3).map(entry => 
-                                React.createElement('div', { key: entry.id, onClick: () => setSelectedEntry(entry), className: "glass p-4 rounded-2xl flex items-center justify-between cursor-pointer" },
-                                    React.createElement('div', { className: "flex items-center gap-4" },
-                                        React.createElement('div', { className: "w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center" }, React.createElement(WeatherIcon, { type: entry.weather, className: "text-orange-500" })),
-                                        React.createElement('div', null,
-                                            React.createElement('p', { className: "font-bold" }, entry.marketName),
-                                            React.createElement('p', { className: "text-[10px] text-gray-500" }, format(parseISO(entry.date), 'dd MMM yyyy'))
-                                        )
-                                    ),
-                                    React.createElement('div', { className: "flex items-center gap-3" },
-                                        React.createElement('button', { onClick: (e) => { e.stopPropagation(); handleEdit(entry); }, className: "p-2 bg-white/5 rounded-lg text-gray-500" }, React.createElement(Edit, { size: 16 })),
-                                        React.createElement('p', { className: "font-bold text-orange-500" }, (entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.2)).toFixed(0), "€")
-                                    )
-                                )
-                            )
+                        React.createElement('div', { className: "glass p-5 rounded-3xl" },
+                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "MARCHÉS"),
+                            React.createElement('p', { 
+                                className: "text-2xl font-black" 
+                            }, entries.length)
                         )
                     ),
-
-                    activeTab === 'form' && React.createElement(motion.div, { key: "form", initial: { y: 20, opacity: 0 }, animate: { y: 0, opacity: 1 }, className: "space-y-6" },
-                        React.createElement('h2', { className: "text-2xl font-black" }, editingId ? "MODIFIER" : "NOUVEAU MARCHÉ"),
-                        React.createElement('form', { onSubmit: handleSubmit, className: "space-y-4" },
-                            React.createElement('input', { 
-                                type: "text", required placeholder: "Nom du Marché", value: formData.marketName, 
-                                onChange: e => setFormData({...formData, marketName: e.target.value}),
-                                className: "w-full glass p-4 rounded-2xl outline-none focus:border-orange-500"
-                            }),
-                            React.createElement('div', { className: "grid grid-cols-2 gap-4" },
-                                React.createElement('input', { type: "date", value: formData.date, onChange: e => setFormData({...formData, date: e.target.value}), className: "glass p-4 rounded-2xl outline-none" }),
-                                React.createElement('select', { value: formData.weather, onChange: e => setFormData({...formData, weather: e.target.value}), className: "glass p-4 rounded-2xl outline-none" },
-                                    ['Soleil', 'Nuageux', 'Pluie', 'Orage', 'Vent'].map(w => React.createElement('option', { key: w, value: w }, w))
-                                )
-                            ),
-                            React.createElement('div', { className: "grid grid-cols-2 gap-4" },
-                                React.createElement('input', { type: "number", placeholder: "Espèces (€)", value: formData.cashGains, onChange: e => setFormData({...formData, cashGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" }),
-                                React.createElement('input', { type: "number", placeholder: "CB (€)", value: formData.cardGains, onChange: e => setFormData({...formData, cardGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" })
-                            ),
-                            React.createElement('input', { type: "number", placeholder: "Frais (€)", value: formData.expenses, onChange: e => setFormData({...formData, expenses: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none w-full" }),
-                            React.createElement('div', { className: "flex gap-3" },
-                                editingId && React.createElement('button', { type: "button", onClick: () => { setEditingId(null); setActiveTab('dashboard'); }, className: "flex-1 glass p-4 rounded-2xl font-bold" }, "ANNULER"),
-                                React.createElement('button', { type: "submit", className: "flex-[2] bg-orange-500 p-4 rounded-2xl font-bold" }, editingId ? "METTRE À JOUR" : "ENREGISTRER")
-                            )
-                        )
-                    ),
-
-                    activeTab === 'history' && React.createElement(motion.div, { key: "hist", initial: { opacity: 0 }, animate: { opacity: 1 }, className: "space-y-4" },
-                        React.createElement('h2', { className: "text-2xl font-black mb-4" }, "HISTORIQUE"),
-                        entries.map(entry => 
-                            React.createElement('div', { key: entry.id, onClick: () => setSelectedEntry(entry), className: "glass p-4 rounded-2xl flex items-center justify-between cursor-pointer" },
+                    React.createElement('div', { className: "space-y-4" },
+                        React.createElement('h3', { 
+                            className: "text-xs font-bold text-gray-500 uppercase" 
+                        }, "Dernières Activités"),
+                        ...entries.slice(0, 5).map(e => 
+                            React.createElement('div', { 
+                                key: e.id, 
+                                className: "glass p-4 rounded-2xl flex justify-between items-center" 
+                            },
                                 React.createElement('div', null,
-                                    React.createElement('p', { className: "font-bold" }, entry.marketName),
-                                    React.createElement('p', { className: "text-[10px] text-gray-500" }, format(parseISO(entry.date), 'dd MMMM yyyy'))
+                                    React.createElement('p', { className: "font-bold" }, e.marketName || "Marché"),
+                                    React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date || "")
                                 ),
-                                React.createElement('div', { className: "flex items-center gap-3" },
-                                    React.createElement('button', { onClick: (e) => { e.stopPropagation(); handleEdit(entry); }, className: "p-2 bg-white/5 rounded-lg text-gray-500" }, React.createElement(Edit, { size: 16 })),
-                                    React.createElement('p', { className: "font-bold text-orange-500" }, (entry.cashGains + entry.cardGains - entry.expenses).toFixed(0), "€")
+                                React.createElement('p', { 
+                                    className: "font-bold text-orange-500" 
+                                }, 
+                                    ((e.cashGains || 0) + (e.cardGains || 0)).toFixed(0) + " €"
                                 )
                             )
                         )
                     )
                 ),
 
-                // --- Navigation ---
-                React.createElement('nav', { className: "fixed bottom-6 left-4 right-4 glass rounded-3xl p-2 flex justify-around items-center z-50 shadow-2xl" },
+                // Navigation
+                React.createElement('nav', { 
+                    className: "fixed bottom-6 left-4 right-4 glass rounded-3xl p-2 flex justify-around items-center" 
+                },
                     [
-                        { id: 'dashboard', icon: LayoutDashboard, label: 'Bord' },
-                        { id: 'week', icon: Calendar, label: 'Sem' },
-                        { id: 'form', icon: PlusCircle, label: 'Ajout' },
-                        { id: 'history', icon: History, label: 'Journal' },
-                        { id: 'settings', icon: Settings, label: 'Réglages' }
+                        { id: 'dashboard', icon: Lucide.LayoutDashboard, label: 'Accueil' },
+                        { id: 'history', icon: Lucide.History, label: 'Journal' }
                     ].map(item => 
                         React.createElement('button', { 
                             key: item.id, 
-                            onClick: () => { setActiveTab(item.id); setEditingId(null); },
-                            className: cn("flex flex-col items-center p-3 rounded-2xl transition-all", activeTab === item.id ? "bg-orange-500 text-white" : "text-gray-500")
-                        },
+                            onClick: () => setActiveTab(item.id),
+                            className: `flex flex-col items-center p-3 rounded-2xl transition ${activeTab === item.id ? 'bg-orange-500 text-white' : 'text-gray-500 hover:text-white'}`
+                        }, 
                             React.createElement(item.icon, { size: 20 }),
-                            React.createElement('span', { className: "text-[8px] font-bold uppercase mt-1" }, item.label)
-                        )
-                    )
-                ),
-
-                // --- Modals ---
-                React.createElement(AnimatePresence, null,
-                    selectedEntry && React.createElement(motion.div, { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 }, className: "fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] p-4 flex items-end" },
-                        React.createElement(motion.div, { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" }, className: "w-full glass rounded-t-[40px] p-8 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar" },
-                            React.createElement('div', { className: "flex justify-between items-start" },
-                                React.createElement('div', null,
-                                    React.createElement('h2', { className: "text-3xl font-black" }, selectedEntry.marketName),
-                                    React.createElement('p', { className: "text-gray-500 font-bold" }, format(parseISO(selectedEntry.date), 'EEEE dd MMMM yyyy', { locale: fr }))
-                                ),
-                                React.createElement('button', { onClick: () => setSelectedEntry(null), className: "p-2 bg-white/10 rounded-full" }, React.createElement(X, { size: 24 }))
-                            ),
-                            React.createElement('div', { className: "grid grid-cols-2 gap-4" },
-                                React.createElement('div', { className: "bg-white/5 p-4 rounded-2xl" }, React.createElement('p', { className: "text-[10px] text-gray-500 font-bold" }, "BÉNÉFICE NET"), React.createElement('p', { className: "text-2xl font-black text-orange-500" }, (selectedEntry.cashGains + selectedEntry.cardGains - selectedEntry.expenses - (selectedEntry.kmTravelled * 0.2)).toFixed(2), "€")),
-                                React.createElement('div', { className: "bg-white/5 p-4 rounded-2xl" }, React.createElement('p', { className: "text-[10px] text-gray-500 font-bold" }, "DISTANCE"), React.createElement('p', { className: "text-2xl font-black" }, selectedEntry.kmTravelled, " km"))
-                            ),
-                            React.createElement('div', { className: "grid grid-cols-2 gap-3" },
-                                React.createElement('button', { onClick: () => handleEdit(selectedEntry), className: "w-full py-4 rounded-2xl border border-orange-500/20 text-orange-500 font-bold" }, "MODIFIER"),
-                                React.createElement('button', { onClick: () => { handleDelete(selectedEntry.id); setSelectedEntry(null); }, className: "w-full py-4 rounded-2xl border border-red-500/20 text-red-500 font-bold" }, "SUPPRIMER")
-                            )
+                            React.createElement('span', { className: "text-[10px] mt-1" }, item.label)
                         )
                     )
                 )
-            )
-        );
-    }
+            );
+        }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(App));
-</script>
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(App));
+    </script>
 </body>
 </html>
