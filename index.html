@@ -31,17 +31,16 @@
     <div id="root">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 20px;">
             <div class="loader"></div>
-            <p style="color: #666; font-size: 14px;">Initialisation de Marché Manager Pro...</p>
+            <p style="color: #666; font-size: 14px;">Chargement de vos données...</p>
         </div>
     </div>
 
     <script type="module">
-        // Importation stable depuis le CDN officiel de Google
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
         import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js';
-        import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, doc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, deleteDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
         
-        import React, { useState, useEffect, useMemo } from 'https://esm.sh/react@18.2.0';
+        import React, { useState, useEffect } from 'https://esm.sh/react@18.2.0';
         import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
         import * as Lucide from 'https://esm.sh/lucide-react@0.284.0';
 
@@ -67,14 +66,15 @@
             auth = getAuth(app);
             db = getFirestore(app);
             provider = new GoogleAuthProvider();
-        } catch (e) { logError("Erreur d'initialisation : " + e.message); }
+        } catch (e) { logError("Erreur : " + e.message); }
 
         function App() {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
             const [entries, setEntries] = useState([]);
             const [activeTab, setActiveTab] = useState('dashboard');
-            const [formData, setFormData] = useState({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0 });
+            const [editingId, setEditingId] = useState(null);
+            const [formData, setFormData] = useState({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0, kmTravelled: 0 });
 
             useEffect(() => {
                 if (!auth) return;
@@ -86,17 +86,36 @@
 
             useEffect(() => {
                 if (!user || !db) return;
-                const q = query(collection(db, 'markets'), where('uid', '==', user.uid), orderBy('date', 'desc'));
+                // Suppression du orderBy pour éviter l'erreur d'index
+                const q = query(collection(db, 'markets'), where('uid', '==', user.uid));
                 return onSnapshot(q, (snapshot) => {
-                    setEntries(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+                    // On trie les données directement ici dans le code (plus simple)
+                    const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    data.sort((a, b) => b.date.localeCompare(a.date));
+                    setEntries(data);
+                    document.getElementById('error-overlay').style.display = 'none';
                 }, (err) => logError("Erreur Firestore : " + err.message));
             }, [user]);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                try {
+                    if (editingId) {
+                        await updateDoc(doc(db, 'markets', editingId), { ...formData, uid: user.uid });
+                    } else {
+                        await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
+                    }
+                    setFormData({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0, kmTravelled: 0 });
+                    setEditingId(null);
+                    setActiveTab('dashboard');
+                } catch (err) { alert("Erreur : " + err.message); }
+            };
 
             if (loading) return React.createElement('div', { className: "h-screen flex items-center justify-center" }, React.createElement('div', { className: "loader" }));
 
             if (!user) return React.createElement('div', { className: "h-screen flex flex-col items-center justify-center p-6 text-center" },
                 React.createElement('h1', { className: "text-4xl font-black text-orange-500 mb-2" }, "MARCHÉ MANAGER"),
-                React.createElement('p', { className: "text-gray-500 mb-8" }, "Gérez vos marchés en un clin d'œil"),
+                React.createElement('p', { className: "text-gray-500 mb-8" }, "Connectez-vous pour commencer"),
                 React.createElement('button', { 
                     onClick: () => signInWithPopup(auth, provider).catch(e => logError("Connexion bloquée : " + e.message)),
                     className: "bg-white text-black px-8 py-4 rounded-2xl font-bold flex items-center gap-3 shadow-xl"
@@ -115,8 +134,8 @@
                 activeTab === 'dashboard' && React.createElement('div', { className: "space-y-6" },
                     React.createElement('div', { className: "grid grid-cols-2 gap-4" },
                         React.createElement('div', { className: "glass p-5 rounded-3xl" },
-                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "TOTAL GAINS"),
-                            React.createElement('p', { className: "text-2xl font-black text-orange-500" }, entries.reduce((acc, e) => acc + (e.cashGains || 0) + (e.cardGains || 0), 0).toFixed(0), "€")
+                            React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "BÉNÉFICE NET"),
+                            React.createElement('p', { className: "text-2xl font-black text-orange-500" }, entries.reduce((acc, e) => acc + (e.cashGains + e.cardGains - e.expenses - (e.kmTravelled * 0.2)), 0).toFixed(0), "€")
                         ),
                         React.createElement('div', { className: "glass p-5 rounded-3xl" },
                             React.createElement('p', { className: "text-[10px] text-gray-500 font-bold mb-1" }, "MARCHÉS"),
@@ -124,36 +143,43 @@
                         )
                     ),
                     React.createElement('div', { className: "space-y-4" },
-                        React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase" }, "Dernières Activités"),
+                        React.createElement('h3', { className: "text-xs font-bold text-gray-500 uppercase" }, "Derniers Marchés"),
                         entries.length > 0 ? entries.slice(0, 5).map(e => React.createElement('div', { key: e.id, className: "glass p-4 rounded-2xl flex justify-between items-center" },
                             React.createElement('div', null,
                                 React.createElement('p', { className: "font-bold" }, e.marketName),
                                 React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date)
                             ),
-                            React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains).toFixed(0), "€")
+                            React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains - e.expenses - (e.kmTravelled * 0.2)).toFixed(0), "€")
                         )) : React.createElement('p', { className: "text-center text-gray-600 py-10" }, "Aucun marché enregistré")
                     )
                 ),
 
                 activeTab === 'form' && React.createElement('div', { className: "space-y-6" },
-                    React.createElement('h2', { className: "text-2xl font-black" }, "AJOUTER UN MARCHÉ"),
-                    React.createElement('form', { 
-                        onSubmit: async (e) => {
-                            e.preventDefault();
-                            await addDoc(collection(db, 'markets'), { ...formData, uid: user.uid, createdAt: new Date().toISOString() });
-                            setFormData({ marketName: '', date: new Date().toISOString().split('T')[0], cashGains: 0, cardGains: 0, expenses: 0 });
-                            setActiveTab('dashboard');
-                        }, 
-                        className: "space-y-4" 
-                    },
-                        React.createElement('input', { type: "text", required: true, placeholder: "Nom du Marché", value: formData.marketName, onChange: e => setFormData({...formData, marketName: e.target.value}), className: "w-full glass p-4 rounded-2xl outline-none" }),
+                    React.createElement('h2', { className: "text-2xl font-black" }, editingId ? "MODIFIER" : "NOUVEAU MARCHÉ"),
+                    React.createElement('form', { onSubmit: handleSubmit, className: "space-y-4" },
+                        React.createElement('input', { type: "text", required: true, placeholder: "Nom du Marché", value: formData.marketName, onChange: e => setFormData({...formData, marketName: e.target.value}), className: "w-full glass p-4 rounded-2xl outline-none focus:border-orange-500" }),
                         React.createElement('input', { type: "date", value: formData.date, onChange: e => setFormData({...formData, date: e.target.value}), className: "w-full glass p-4 rounded-2xl outline-none" }),
                         React.createElement('div', { className: "grid grid-cols-2 gap-4" },
                             React.createElement('input', { type: "number", placeholder: "Espèces (€)", value: formData.cashGains || '', onChange: e => setFormData({...formData, cashGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" }),
                             React.createElement('input', { type: "number", placeholder: "CB (€)", value: formData.cardGains || '', onChange: e => setFormData({...formData, cardGains: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" })
                         ),
-                        React.createElement('button', { type: "submit", className: "w-full bg-orange-500 p-5 rounded-2xl font-bold" }, "ENREGISTRER")
+                        React.createElement('div', { className: "grid grid-cols-2 gap-4" },
+                            React.createElement('input', { type: "number", placeholder: "Frais (€)", value: formData.expenses || '', onChange: e => setFormData({...formData, expenses: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" }),
+                            React.createElement('input', { type: "number", placeholder: "KM", value: formData.kmTravelled || '', onChange: e => setFormData({...formData, kmTravelled: Number(e.target.value)}), className: "glass p-4 rounded-2xl outline-none" })
+                        ),
+                        React.createElement('button', { type: "submit", className: "w-full bg-orange-500 p-5 rounded-2xl font-bold shadow-lg" }, editingId ? "METTRE À JOUR" : "ENREGISTRER")
                     )
+                ),
+
+                activeTab === 'history' && React.createElement('div', { className: "space-y-4" },
+                    React.createElement('h2', { className: "text-2xl font-black" }, "HISTORIQUE"),
+                    entries.map(e => React.createElement('div', { key: e.id, className: "glass p-4 rounded-2xl flex justify-between items-center" },
+                        React.createElement('div', null,
+                            React.createElement('p', { className: "font-bold" }, e.marketName),
+                            React.createElement('p', { className: "text-[10px] text-gray-500" }, e.date)
+                        ),
+                        React.createElement('p', { className: "font-bold text-orange-500" }, (e.cashGains + e.cardGains - e.expenses).toFixed(0), "€")
+                    ))
                 ),
 
                 React.createElement('nav', { className: "fixed bottom-6 left-4 right-4 glass rounded-3xl p-2 flex justify-around items-center z-50 shadow-2xl" },
@@ -163,8 +189,8 @@
                         { id: 'history', icon: Lucide.History }
                     ].map(item => React.createElement('button', { 
                         key: item.id, 
-                        onClick: () => setActiveTab(item.id),
-                        className: `flex flex-col items-center p-4 rounded-2xl ${activeTab === item.id ? 'bg-orange-500 text-white' : 'text-gray-500'}`
+                        onClick: () => { setActiveTab(item.id); setEditingId(null); },
+                        className: `flex flex-col items-center p-4 rounded-2xl transition-all ${activeTab === item.id ? 'bg-orange-500 text-white' : 'text-gray-500'}`
                     }, React.createElement(item.icon, { size: 24 })))
                 )
             );
