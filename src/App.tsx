@@ -18,7 +18,6 @@ import {
   doc,
   deleteDoc,
   setDoc,
-  updateDoc,
   getDocs,
   handleFirestoreError,
   OperationType
@@ -50,8 +49,7 @@ import {
   Camera,
   X,
   Filter,
-  Info,
-  Edit
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -223,7 +221,6 @@ function App() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<MarketEntry | null>(null);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -406,19 +403,11 @@ function App() {
     if (!user) return;
 
     try {
-      if (editingId) {
-        await updateDoc(doc(db, 'markets', editingId), {
-          ...formData,
-          uid: user.uid,
-          updatedAt: new Date().toISOString()
-        });
-      } else {
-        await addDoc(collection(db, 'markets'), {
-          ...formData,
-          uid: user.uid,
-          createdAt: new Date().toISOString()
-        });
-      }
+      await addDoc(collection(db, 'markets'), {
+        ...formData,
+        uid: user.uid,
+        createdAt: new Date().toISOString()
+      });
       
       setShowSuccess(true);
       
@@ -438,32 +427,11 @@ function App() {
           tags: [],
           photoUrl: ''
         });
-        setEditingId(null);
         setActiveTab('dashboard');
       }, 1500);
     } catch (error) {
-      handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, editingId ? `markets/${editingId}` : 'markets');
+      handleFirestoreError(error, OperationType.CREATE, 'markets');
     }
-  };
-
-  const handleEdit = (entry: MarketEntry) => {
-    setFormData({
-      marketName: entry.marketName,
-      date: entry.date,
-      weather: entry.weather,
-      kmTravelled: entry.kmTravelled,
-      startTime: entry.startTime,
-      endTime: entry.endTime,
-      cashGains: entry.cashGains,
-      cardGains: entry.cardGains,
-      expenses: entry.expenses,
-      satisfaction: entry.satisfaction,
-      tags: entry.tags || [],
-      photoUrl: entry.photoUrl || ''
-    });
-    setEditingId(entry.id);
-    setSelectedEntry(null);
-    setActiveTab('form');
   };
 
   const handleDelete = async (id: string) => {
@@ -765,20 +733,9 @@ function App() {
                           <p className="text-xs text-gray-500">{format(parseISO(entry.date), 'dd MMMM yyyy', { locale: fr })}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(entry);
-                          }}
-                          className="p-2 bg-white/5 rounded-xl text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 transition-colors"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <div className="text-right">
-                          <p className="font-bold text-orange-500">+{entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.20)}€</p>
-                          <SatisfactionStars rating={entry.satisfaction} />
-                        </div>
+                      <div className="text-right">
+                        <p className="font-bold text-orange-500">+{entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.20)}€</p>
+                        <SatisfactionStars rating={entry.satisfaction} />
                       </div>
                     </div>
                   ))}
@@ -850,20 +807,9 @@ function App() {
                             <p className="text-xs text-gray-500">{entry.startTime} - {entry.endTime}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(entry);
-                            }}
-                            className="p-2 bg-white/5 rounded-xl text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 transition-colors"
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-orange-500">+{entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.20)}€</p>
-                            <p className="text-[10px] text-gray-500 uppercase font-bold">Net</p>
-                          </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-orange-500">+{entry.cashGains + entry.cardGains - entry.expenses - (entry.kmTravelled * 0.20)}€</p>
+                          <p className="text-[10px] text-gray-500 uppercase font-bold">Net</p>
                         </div>
                       </div>
                       
@@ -912,7 +858,7 @@ function App() {
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              <h2 className="text-2xl font-bold mb-6">{editingId ? 'Modifier le Marché' : 'Nouveau Marché'}</h2>
+              <h2 className="text-2xl font-bold mb-6">Nouveau Marché</h2>
               <form onSubmit={handleSubmit} className="space-y-6 pb-12">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -1206,40 +1152,12 @@ function App() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  {editingId && (
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setEditingId(null);
-                        setFormData({
-                          marketName: '',
-                          date: format(new Date(), 'yyyy-MM-dd'),
-                          weather: 'Soleil',
-                          kmTravelled: 0,
-                          startTime: '08:00',
-                          endTime: '13:00',
-                          cashGains: 0,
-                          cardGains: 0,
-                          expenses: 0,
-                          satisfaction: 5,
-                          tags: [],
-                          photoUrl: ''
-                        });
-                        setActiveTab('dashboard');
-                      }}
-                      className="flex-1 bg-white/5 text-white font-bold py-5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all active:scale-95"
-                    >
-                      Annuler
-                    </button>
-                  )}
-                  <button 
-                    type="submit"
-                    className="flex-[2] bg-orange-500 text-white font-bold py-5 rounded-2xl shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all active:scale-95"
-                  >
-                    {editingId ? 'Mettre à jour' : 'Enregistrer le Marché'}
-                  </button>
-                </div>
+                <button 
+                  type="submit"
+                  className="w-full bg-orange-500 text-white font-bold py-5 rounded-2xl shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition-all active:scale-95"
+                >
+                  Enregistrer le Marché
+                </button>
               </form>
             </motion.div>
           )}
@@ -1404,16 +1322,7 @@ function App() {
                           <p className="text-xs text-gray-500">{format(parseISO(entry.date), 'EEEE dd MMMM yyyy', { locale: fr })}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(entry);
-                          }}
-                          className="p-2 bg-white/5 rounded-xl text-gray-400 hover:text-orange-500 hover:bg-orange-500/10 transition-colors"
-                        >
-                          <Edit size={18} />
-                        </button>
+                      <div className="flex items-center gap-2">
                         <Info size={18} className="text-gray-600" />
                       </div>
                     </div>
@@ -1580,25 +1489,17 @@ function App() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => handleEdit(selectedEntry)}
-                    className="w-full py-4 rounded-2xl border border-orange-500/20 text-orange-500 font-bold text-sm hover:bg-orange-500/10 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Edit size={16} /> Modifier
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (selectedEntry.id) {
-                        handleDelete(selectedEntry.id);
-                        setSelectedEntry(null);
-                      }
-                    }}
-                    className="w-full py-4 rounded-2xl border border-red-500/20 text-red-500 font-bold text-sm hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Trash2 size={16} /> Supprimer
-                  </button>
-                </div>
+                <button 
+                  onClick={() => {
+                    if (selectedEntry.id) {
+                      handleDelete(selectedEntry.id);
+                      setSelectedEntry(null);
+                    }
+                  }}
+                  className="w-full py-4 rounded-2xl border border-red-500/20 text-red-500 font-bold text-sm hover:bg-red-500/10 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 size={16} /> Supprimer ce marché
+                </button>
               </div>
             </motion.div>
           </motion.div>
