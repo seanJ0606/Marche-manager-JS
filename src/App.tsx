@@ -92,6 +92,14 @@ import autoTable from 'jspdf-autotable';
 
 // --- Types ---
 
+interface MiscItem {
+  id: string;
+  amount: number;
+  description: string;
+  createdAt: string;
+  isMonthly?: boolean;
+}
+
 interface MarketEntry {
   id?: string;
   uid: string;
@@ -114,21 +122,15 @@ interface MarketEntry {
 // --- Components ---
 
 const Logo = ({ className = "w-12 h-12" }: { className?: string }) => (
-  <div className={cn("relative flex items-center justify-center", className)}>
+  <div className={cn("relative flex items-center justify-center overflow-hidden rounded-2xl bg-[#FF5F00] shadow-inner", className)}>
     <svg viewBox="0 0 100 100" className="w-full h-full">
-      {/* Orange Background */}
-      <rect width="100" height="100" rx="22" fill="#FF5F00" />
-      
-      {/* White M Base */}
-      <path d="M22 42 L22 71 L30 71 L30 42 Z" fill="white" />
-      <path d="M30 42 L43 62 L56 42 L56 71 L64 71 L64 42 L56 42 L43 56 L30 42 Z" fill="white" />
-      <path d="M64 42 L64 71 L72 71 L72 42 Z" fill="white" />
-      
-      {/* Awning */}
-      <path d="M22 42 C22 38 25 36 28 36 L58 36 C61 36 64 38 64 42 L64 46 C64 46 61 44 58 44 C55 44 52 46 52 46 C52 46 49 44 46 44 C43 44 40 46 40 46 C40 46 37 44 34 44 C31 44 28 46 28 46 C28 46 25 44 22 44 Z" fill="white" />
-      
-      {/* Black Swoosh */}
-      <path d="M43 71 C43 71 55 50 78 31 L78 41 C78 41 60 55 50 71 Z" fill="#1A1A1A" />
+      {/* Superimposed M's for a modern SaaS look */}
+      <g transform="translate(-4, -4)">
+        <path d="M25 75 V25 L50 50 L75 25 V75" fill="none" stroke="white" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
+      <g transform="translate(4, 4)">
+        <path d="M25 75 V25 L50 50 L75 25 V75" fill="none" stroke="black" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
     </svg>
   </div>
 );
@@ -211,6 +213,9 @@ function App() {
   const [selectedWeekDay, setSelectedWeekDay] = useState<number>(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1); // 0-6 (Mon-Sun)
   const [merchandiseExpenses, setMerchandiseExpenses] = useState<number>(0);
   const [stockPercentage, setStockPercentage] = useState<number>(100);
+  const [miscExpenses, setMiscExpenses] = useState<MiscItem[]>([]);
+  const [miscIncome, setMiscIncome] = useState<MiscItem[]>([]);
+  const [isMiscModalOpen, setIsMiscModalOpen] = useState<'expenses' | 'income' | null>(null);
   const [isEditingExpenses, setIsEditingExpenses] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<MarketEntry | null>(null);
@@ -292,6 +297,8 @@ function App() {
         const data = doc.data();
         setMerchandiseExpenses(data.merchandiseExpenses || 0);
         setStockPercentage(data.stockPercentage !== undefined ? data.stockPercentage : 100);
+        setMiscExpenses(data.miscExpenses || []);
+        setMiscIncome(data.miscIncome || []);
       }
     });
 
@@ -489,6 +496,159 @@ function App() {
     });
   };
 
+  const addMiscItem = async (type: 'expenses' | 'income', amount: number, description: string, isMonthly: boolean = false) => {
+    if (!user) return;
+    const newItem: MiscItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      amount,
+      description,
+      createdAt: new Date().toISOString(),
+      isMonthly
+    };
+    
+    const updatedItems = type === 'expenses' ? [...miscExpenses, newItem] : [...miscIncome, newItem];
+    const field = type === 'expenses' ? 'miscExpenses' : 'miscIncome';
+    
+    try {
+      await setDoc(doc(db, 'settings', user.uid), { [field]: updatedItems }, { merge: true });
+      showNotification("Ajouté avec succès", 'success');
+    } catch (error) {
+      console.error("Error adding misc item:", error);
+      showNotification("Erreur lors de l'ajout", 'error');
+    }
+  };
+
+  const removeMiscItem = async (type: 'expenses' | 'income', id: string) => {
+    if (!user) return;
+    const updatedItems = type === 'expenses' 
+      ? miscExpenses.filter(i => i.id !== id) 
+      : miscIncome.filter(i => i.id !== id);
+    const field = type === 'expenses' ? 'miscExpenses' : 'miscIncome';
+    
+    try {
+      await setDoc(doc(db, 'settings', user.uid), { [field]: updatedItems }, { merge: true });
+      showNotification("Supprimé", 'success');
+    } catch (error) {
+      console.error("Error removing misc item:", error);
+    }
+  };
+
+  const MiscModal = () => {
+    const [amount, setAmount] = useState<string>('');
+    const [description, setDescription] = useState('');
+    const [isMonthly, setIsMonthly] = useState(false);
+    const type = isMiscModalOpen;
+    const items = type === 'expenses' ? miscExpenses : miscIncome;
+    const title = type === 'expenses' ? 'Frais Divers' : 'Bénéfices Divers';
+    const color = type === 'expenses' ? 'text-red-400' : 'text-green-400';
+
+    if (!type) return null;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#1a1a1a] w-full max-w-lg rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl"
+        >
+          <div className="p-6 border-b border-white/5 flex justify-between items-center">
+            <h3 className={cn("text-xl font-bold", color)}>{title}</h3>
+            <button onClick={() => setIsMiscModalOpen(null)} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+              <X size={24} />
+            </button>
+          </div>
+          
+          <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+            <div className="bg-white/5 p-4 rounded-2xl space-y-3">
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400 mb-1 block">Montant (€)</label>
+                  <input 
+                    type="number" 
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    onFocus={(e) => e.target.select()}
+                    placeholder="0.00"
+                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-orange-500 outline-none transition-all"
+                  />
+                </div>
+                <div className="flex-[2]">
+                  <label className="text-xs text-gray-400 mb-1 block">Description</label>
+                  <input 
+                    type="text" 
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Ex: Frais de dossier..."
+                    className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-orange-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 px-1">
+                <input 
+                  type="checkbox" 
+                  id="isMonthly"
+                  checked={isMonthly}
+                  onChange={(e) => setIsMonthly(e.target.checked)}
+                  className="w-4 h-4 accent-orange-500 rounded"
+                />
+                <label htmlFor="isMonthly" className="text-xs text-gray-400 cursor-pointer">Frais mensuel (récurrent)</label>
+              </div>
+
+              <button 
+                onClick={() => {
+                  if (amount && description) {
+                    addMiscItem(type, parseFloat(amount), description, isMonthly);
+                    setAmount('');
+                    setDescription('');
+                    setIsMonthly(false);
+                  }
+                }}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <PlusCircle size={18} />
+                Ajouter
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {items.length === 0 ? (
+                <p className="text-center text-gray-500 py-8 italic">Aucune entrée enregistrée</p>
+              ) : (
+                items.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between bg-white/5 p-4 rounded-2xl group">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-lg">{item.amount.toFixed(2)} €</p>
+                        {item.isMonthly && (
+                          <span className="bg-orange-500/20 text-orange-500 text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-orange-500/20">Mensuel</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-400">{item.description}</p>
+                    </div>
+                    <button 
+                      onClick={() => removeMiscItem(type, item.id)}
+                      className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          
+          <div className="p-6 bg-white/5 flex justify-between items-center">
+            <span className="text-gray-400">Total {title}</span>
+            <span className={cn("text-2xl font-black", color)}>
+              {items.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2)} €
+            </span>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
   // Stats Calculations
   const stats = useMemo(() => {
     const totalGains = entries.reduce((acc, curr) => acc + curr.cashGains + curr.cardGains, 0);
@@ -497,6 +657,10 @@ function App() {
     const totalFuelCost = totalKm * 0.20;
     const totalProfit = totalGains - totalExpenses - totalFuelCost;
     const totalProfitWithStock = totalProfit - merchandiseExpenses;
+    
+    const totalMiscExpenses = miscExpenses.reduce((acc, curr) => acc + curr.amount, 0);
+    const totalMiscIncome = miscIncome.reduce((acc, curr) => acc + curr.amount, 0);
+    const globalFinalTotal = totalProfit + totalMiscIncome - merchandiseExpenses - totalMiscExpenses;
     
     let chartData: any[] = [];
 
@@ -542,8 +706,19 @@ function App() {
       }).reverse();
     }
 
-    return { totalGains, totalExpenses, totalProfit, totalProfitWithStock, totalKm, totalFuelCost, chartData };
-  }, [entries, statsPeriod, merchandiseExpenses]);
+    return { 
+      totalGains, 
+      totalExpenses, 
+      totalProfit, 
+      totalProfitWithStock, 
+      totalKm, 
+      totalFuelCost, 
+      chartData,
+      totalMiscExpenses,
+      totalMiscIncome,
+      globalFinalTotal
+    };
+  }, [entries, statsPeriod, merchandiseExpenses, miscExpenses, miscIncome]);
 
   const weekEntriesByDay = useMemo(() => {
     const start = startOfWeek(new Date(), { weekStartsOn: 1 });
@@ -661,20 +836,67 @@ function App() {
                   <p className="text-[10px] text-gray-500 mt-1">Carburant: -{stats.totalFuelCost.toLocaleString()}€</p>
                 </div>
                 <div className="bg-[#141414] p-5 rounded-3xl border border-white/5">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Bénéfice Total</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Stock Marchandise</p>
+                  <p className="text-2xl font-bold text-gray-300">-{merchandiseExpenses.toLocaleString()}€</p>
+                  <p className="text-[10px] text-gray-500 mt-1">Dépenses globales</p>
+                </div>
+                <button 
+                  onClick={() => setIsMiscModalOpen('income')}
+                  className="bg-[#141414] p-5 rounded-3xl border border-white/5 text-left hover:border-green-500/30 transition-all active:scale-95"
+                >
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Bénéfices Divers</p>
+                  <p className="text-2xl font-bold text-green-500">+{stats.totalMiscIncome.toLocaleString()}€</p>
+                  <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                    <Info size={10} /> Détails
+                  </p>
+                </button>
+                <button 
+                  onClick={() => setIsMiscModalOpen('expenses')}
+                  className="bg-[#141414] p-5 rounded-3xl border border-white/5 text-left hover:border-red-500/30 transition-all active:scale-95"
+                >
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Frais Divers</p>
+                  <p className="text-2xl font-bold text-red-500">-{stats.totalMiscExpenses.toLocaleString()}€</p>
+                  <p className="text-[10px] text-gray-500 mt-1 flex items-center gap-1">
+                    <Info size={10} /> Détails
+                  </p>
+                </button>
+              </div>
+
+              {/* Global Total Card */}
+              <div className="bg-[#141414] p-6 rounded-3xl border border-white/5 flex justify-between items-center">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Bénéfice Net / Stock</p>
                   <p className={cn("text-2xl font-bold", stats.totalProfitWithStock >= 0 ? "text-green-500" : "text-red-500")}>
                     {stats.totalProfitWithStock.toLocaleString()}€
                   </p>
-                  <p className="text-[10px] text-gray-500 mt-1">Stock: -{merchandiseExpenses.toLocaleString()}€</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold">Sous-total</p>
+                  <p className="text-[10px] text-gray-400">Net - Marchandise</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-8 rounded-[2.5rem] shadow-2xl shadow-orange-500/20 relative overflow-hidden group">
+                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                <div className="relative z-10">
+                  <p className="text-orange-100/80 text-xs font-black uppercase tracking-[0.2em] mb-2">Total Global Final</p>
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-5xl font-black text-white tracking-tighter">
+                      {stats.globalFinalTotal.toLocaleString()}
+                    </h2>
+                    <span className="text-2xl font-bold text-white/80">€</span>
+                  </div>
+                  <p className="text-orange-100/60 text-[10px] mt-4 font-medium leading-relaxed">
+                    Inclut : Bénéfice net + Bénéfices divers - Stock - Frais divers
+                  </p>
                 </div>
               </div>
 
               {/* Merchandise Expenses Section */}
-              <div className="bg-orange-500/5 border border-orange-500/10 p-6 rounded-3xl space-y-4">
+              <div className="bg-white/5 border border-white/10 p-6 rounded-3xl space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-sm font-bold text-orange-500 uppercase tracking-widest">Frais Marchandise</h3>
-                    <p className="text-xs text-gray-500">Stock actuel / Dépenses globales</p>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Gestion Stock</h3>
                   </div>
                   <button 
                     onClick={() => setIsEditingExpenses(!isEditingExpenses)}
@@ -727,20 +949,17 @@ function App() {
               </div>
 
               {/* Chart */}
-              <div className="bg-[#141414] p-6 rounded-3xl border border-white/5">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <TrendingUp size={16} className="text-orange-500" />
-                    Évolution des Gains
-                  </h3>
+              <div className="bg-[#141414] p-6 rounded-[2rem] border border-white/5">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-400">Performance</h3>
                   <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
                     {(['day', 'week', 'month', 'year'] as const).map((p) => (
                       <button
                         key={p}
                         onClick={() => setStatsPeriod(p)}
                         className={cn(
-                          "px-2 py-1 text-[10px] font-bold uppercase rounded-lg transition-all",
-                          statsPeriod === p ? "bg-orange-500 text-white" : "text-gray-500 hover:text-gray-300"
+                          "px-3 py-1.5 text-[10px] font-black uppercase rounded-lg transition-all",
+                          statsPeriod === p ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "text-gray-500 hover:text-gray-300"
                         )}
                       >
                         {p === 'day' ? 'Jour' : p === 'week' ? 'Sem' : p === 'month' ? 'Mois' : 'An'}
@@ -750,21 +969,51 @@ function App() {
                 </div>
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={stats.chartData}>
+                    <LineChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                      <XAxis dataKey="name" stroke="#555" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#555" fontSize={12} tickLine={false} axisLine={false} />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: '12px' }}
-                        itemStyle={{ color: '#f97316' }}
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="#444" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        dy={10}
+                        fontFamily="monospace"
                       />
-                      <Bar dataKey="gains" radius={[6, 6, 0, 0]}>
-                        {stats.chartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index === stats.chartData.length - 1 ? '#f97316' : '#333'} />
-                        ))}
-                        <LabelList dataKey="gains" position="top" fill="#f97316" fontSize={10} offset={10} formatter={(val: number) => val > 0 ? `${val}€` : ''} />
-                      </Bar>
-                    </BarChart>
+                      <YAxis 
+                        stroke="#444" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        fontFamily="monospace"
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1a1a1a', 
+                          border: 'none', 
+                          borderRadius: '16px',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                          padding: '12px'
+                        }}
+                        itemStyle={{ color: '#f97316', fontWeight: 'bold' }}
+                        labelStyle={{ color: '#666', marginBottom: '4px', fontSize: '10px', textTransform: 'uppercase' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="gains" 
+                        stroke="#f97316" 
+                        strokeWidth={4} 
+                        dot={{ fill: '#f97316', strokeWidth: 2, r: 4, stroke: '#141414' }}
+                        activeDot={{ r: 6, strokeWidth: 0 }}
+                        animationDuration={1500}
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               </div>
@@ -1733,6 +1982,11 @@ function App() {
           </button>
         </div>
       </nav>
+
+      {/* Misc Items Modal */}
+      <AnimatePresence>
+        {isMiscModalOpen && <MiscModal />}
+      </AnimatePresence>
 
       {/* Confirm Modal */}
       <AnimatePresence>
